@@ -1,0 +1,3865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F6F3EB">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23263C37'/%3E%3Cpath d='m16 6 9 5v10l-9 5-9-5V11zM7 11l9 5 9-5M16 16v10' fill='none' stroke='%23F4E2A8' stroke-width='2'/%3E%3C/svg%3E">
+<title>3D 几何探险家 · 温暖几何实验室</title>
+<style>
+  :root {
+    --bg: #F6F3EB; --surface: #FFFEFA; --ink: #263C37; --muted: #70786D;
+    --line: #E4E4D8; --accent: #D85A32; --green: #287D70; --soft-green: #EAF1E9;
+    --system-blue: var(--green); --system-green: var(--green); --system-indigo: var(--green);
+    --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; }
+  button { color: inherit; cursor: pointer; }
+  button { -webkit-tap-highlight-color: transparent; }
+  button:disabled { cursor: default; opacity: .4; }
+  button, a, input { outline-offset: 4px; }
+  :focus-visible { outline: 3px solid var(--green); }
+  button { touch-action: manipulation; }
+  [hidden] { display: none !important; }
+  h1, h2, h3, p { margin: 0; }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+  .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .icon-library { position: absolute; width: 0; height: 0; overflow: hidden; }
+  #app { height: 100dvh; min-height: 760px; padding: 0 28px 24px; display: flex; flex-direction: column; }
+  .nav-bar { min-height: 100px; display: grid; grid-template-columns: 1fr auto 1fr; gap: 22px; align-items: center; }
+  .nav-left { display: flex; align-items: center; gap: 13px; }
+  .nav-logo { width: 48px; height: 48px; border-radius: 16px; background: var(--ink); color: #F4E2A8; display: grid; place-items: center; transform: rotate(-5deg); }
+  .nav-logo .icon { width: 30px; height: 30px; }
+  .nav-title { font-size: 20px; font-weight: 750; letter-spacing: -.5px; line-height: 1.3; }
+  .brand-caption { font-size: 10px; font-weight: 650; letter-spacing: 2.6px; margin-top: 5px; color: var(--muted); }
+  .segmented-control { display: flex; padding: 5px; border: 1px solid #E5E3D6; border-radius: 15px; background: #ECEBE1; gap: 4px; }
+  .segment-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: transparent; color: #71766B; font-weight: 650; }
+  .segment-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 4px #263C3708; }
+  .segment-btn.active .icon { color: var(--accent); }
+  .nav-note { justify-self: end; display: flex; align-items: center; gap: 8px; color: #7B8071; font-size: 12px; letter-spacing: 1px; }
+  .nav-note .icon { color: var(--accent); width: 18px; }
+  .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 208px minmax(0, 1fr) 300px; gap: 20px; }
+  .shape-dock, .inspector-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; min-height: 0; }
+  .shape-dock { display: flex; flex-direction: column; padding: 21px 10px 10px; }
+  .dock-header { display: flex; justify-content: space-between; align-items: center; padding: 0 9px; }
+  .dock-header h2 { font-size: 17px; font-weight: 750; }
+  .count-badge { border: 1px solid var(--line); color: var(--muted); font-size: 11px; padding: 2px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .dock-description { margin: 7px 9px 17px; color: var(--muted); font-size: 12px; }
+  .dock-list { overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; scrollbar-width: thin; scrollbar-color: #DADFD2 transparent; display: flex; flex-direction: column; gap: 5px; padding: 1px 2px 4px; }
+  .dock-item { flex-shrink: 0; display: flex; align-items: center; min-height: 55px; border: 1px solid transparent; border-radius: 13px; }
+  .dock-item:hover { background: #F6F7F0; }
+  .dock-item.active { border-color: #BBCFBF; background: #EDF3EA; }
+  .dock-item.net-disabled .shape-select { cursor: not-allowed; }
+  .shape-select { display: flex; flex: 1; min-width: 0; align-items: center; gap: 9px; align-self: stretch; padding: 5px 0 5px 7px; background: none; border: 0; border-radius: 12px; text-align: left; }
+  .shape-name { font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .dock-item.active .shape-name { color: #23665B; font-weight: 750; }
+  .dock-icon { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; }
+  .dock-icon svg { width: 22px; height: 22px; }
+  .lavender { background: #EEE9F7; color: #7B68A5; } .blue { background: #E7EEF3; color: #5C87A0; }
+  .mint { background: #E6F0E8; color: #5C9385; } .peach { background: #F8EBE0; color: #BC875F; }
+  .sand { background: #F6EFD5; color: #AE9352; } .rose { background: #F6E5E3; color: #BA7F7C; }
+  .quick-add-btn { width: 44px; height: 44px; flex-shrink: 0; border: 0; background: none; border-radius: 10px; color: #8F9C8E; display: grid; place-items: center; }
+  .quick-add-btn .icon { width: 16px; height: 16px; }
+  .quick-add-btn:hover { background: #DCE9DC; color: #24695D; }
+  .dock-item.active .quick-add-btn { color: var(--green); }
+  .dock-footer { display: flex; align-items: center; justify-content: center; gap: 7px; border-top: 1px solid var(--line); margin: 10px 8px 0; padding: 13px 0 3px; font-size: 11px; color: var(--muted); }
+  .dock-footer .icon { width: 15px; height: 15px; }
+  .center-column { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+  .stage-card { border: 1px solid #E1E3D6; background: #F9F8F0; border-radius: 24px; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  .stage-header { padding: 22px 25px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 1; }
+  .eyebrow { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+  .eyebrow:before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #72A193; }
+  #stageShapeName { font-size: 32px; letter-spacing: -1px; font-weight: 700; line-height: 1.25; margin-top: 7px; }
+  .stage-tag { align-self: flex-start; display: flex; align-items: center; gap: 5px; border: 1px solid #DEE4D7; border-radius: 8px; padding: 5px 8px; color: #7A8978; font-size: 11px; }
+  .stage-tag .icon { width: 14px; height: 14px; }
+  #stageViewport { flex: 1; min-height: 240px; min-width: 0; position: relative; }
+  #canvas { display: block; position: absolute; width: 100%; height: 100%; inset: 0; touch-action: none; }
+  .empty-state { position: absolute; inset: 0; background: #F9F8F0E8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; color: var(--muted); }
+  .empty-state .icon { width: 52px; height: 52px; stroke-width: 1; color: #8FAB94; margin-bottom: 8px; }
+  .empty-state strong { color: var(--ink); font-size: 20px; }
+  .stage-bottom { padding: 0 20px 17px; }
+  .stage-gesture { text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; color: #8B9387; font-size: 11px; margin-bottom: 14px; }
+  .stage-gesture .icon { width: 14px; height: 14px; }
+  .stage-toolbar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #E4E6DA; padding-top: 12px; min-height: 44px; }
+  .nav-tools { display: flex; gap: 4px; flex-wrap: nowrap; flex: 0 0 auto; align-items: center; }
+  .tool-btn { border: 1px solid #E2E5D9; background: #FFFEF9; border-radius: 9px; min-height: 38px; padding: 0 7px; display: flex; gap: 4px; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 550; white-space: nowrap; }
+  .tool-btn .icon { width: 15px; height: 15px; color: #6D7F70; }
+  .tool-btn:hover { background: #F0F3E9; border-color: #B6CBBB; }
+  .tool-btn.active { color: #246A5C; background: #E5EEE1; border-color: #A8C2AC; }
+  .tool-btn.active .icon { color: var(--green); }
+  .zoom-toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #FFFEF9;
+    border: 1px solid #E2E5D9;
+    border-radius: 12px;
+    padding: 3px 6px;
+    min-height: 38px;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(38, 60, 55, 0.04);
+    z-index: 2;
+    flex: 0 0 auto;
+  }
+  .zoom-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #4A5649;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .zoom-btn:hover {
+    background: #EDF2E8;
+    color: var(--green);
+    border-color: #D2DECE;
+  }
+  .zoom-btn:active {
+    transform: scale(0.92);
+    background: #DFE8D9;
+  }
+  .zoom-btn .icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.2;
+  }
+  .zoom-slider-wrapper {
+    display: flex;
+    align-items: center;
+    width: 85px;
+    padding: 0 2px;
+  }
+  .zoom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #DFE4D8;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .zoom-slider:hover {
+    background: #D2D9CA;
+  }
+  .zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #263C37;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: grab;
+    transition: transform 0.1s ease, background-color 0.15s ease;
+  }
+  .zoom-slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.18);
+    background: var(--green);
+  }
+  .zoom-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #263C37;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: grab;
+    transition: transform 0.1s ease;
+  }
+  .zoom-badge-btn {
+    border: 1px solid #DCE2D4;
+    background: #F8F9F3;
+    color: #4A5649;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    padding: 2px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 40px;
+    text-align: center;
+    transition: all 0.15s ease;
+  }
+  .zoom-badge-btn:hover {
+    background: #E8EDE3;
+    color: var(--green);
+    border-color: #B8CEBD;
+  }
+  .zoom-badge-btn:active {
+    transform: scale(0.95);
+  }
+  .mini-compass { display: flex; gap: 9px; font-size: 10px; color: #8B9387; white-space: nowrap; flex: 0 0 auto; align-items: center; }
+  .mini-compass div { display: flex; gap: 4px; align-items: center; }
+  .compass-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+  .dot-x { background: #CD8474; } .dot-y { background: #77A482; } .dot-z { background: #81A3BD; }
+  .bottom-island { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px 22px; flex-shrink: 0; }
+  .knowledge-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .island-shape-badge { display: flex; gap: 11px; align-items: center; min-width: 0; }
+  .island-icon-badge { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; }
+  .island-icon-badge svg { width: 26px; height: 26px; }
+  .island-emoji { display: none; }
+  .knowledge-kicker { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+  .island-name { font-size: 16px; font-weight: 750; }
+  .speech-apple-btn { min-height: 44px; padding: 0 14px; border: none; border-radius: 12px; background: var(--accent); color: #FFFDF5; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .speech-apple-btn .icon { width: 17px; height: 17px; }
+  .speech-apple-btn:hover { background: #BE4824; }
+  .speech-apple-btn.speaking { background: var(--green); }
+  .island-facts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .fact { border-left: 1px solid var(--line); padding-left: 14px; }
+  .fact:first-child { border-left: 0; padding-left: 0; }
+  .fact-label { font-size: 10px; color: #8B9184; margin-bottom: 4px; display: block; }
+  .fact-tag { font-size: 14px; font-weight: 650; display: block; }
+  .fact-example { margin-top: 13px; color: #7C826F; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+  .fact-example .icon { width: 13px; height: 13px; color: #AF9353; }
+  .inspector-panel { display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #DADFD2 transparent; padding: 22px 18px 18px; }
+  .panel-section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+  .panel-section-title .icon { width: 18px; height: 18px; color: var(--green); }
+  .panel-description { color: var(--muted); font-size: 11px; margin-top: 5px; }
+  .view-grid-card { margin-top: 15px; padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+  .view-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .view-cell { border: 1px solid #E7E8DC; border-radius: 10px; background: #F5F3EC; padding: 0 0 7px; overflow: hidden; min-width: 0; }
+  .view-cell .preview { display: block; height: 52px; width: 100%; }
+  .view-cell canvas { display: block; width: 100%; height: 100%; }
+  .view-cell .label { display: block; font-size: 12px; color: #707D6C; }
+  .view-cell:hover { border-color: #9BBBA4; }
+  .view-cell.active { border-color: var(--green); background: #E7EEE1; }
+  .view-cell.active .label { color: var(--green); font-weight: 700; }
+  .inspector-content { padding-top: 17px; }
+  .card-box { margin-bottom: 19px; }
+  .card-box:last-child { margin-bottom: 0; }
+  .card-box-title { display: flex; justify-content: space-between; align-items: center; min-height: 22px; font-size: 14px; font-weight: 650; margin-bottom: 9px; }
+  .card-box-title label { font: inherit; }
+  #posDisplay { font-size: 10px; font-weight: 500; color: #8B9785; font-variant-numeric: tabular-nums; }
+  .gizmo-segmented { display: flex; gap: 8px; }
+  .gizmo-pill { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; flex: 1; border: 1px solid var(--line); border-radius: 10px; background: transparent; font-size: 14px; }
+  .gizmo-pill .icon { width: 16px; height: 16px; }
+  .gizmo-pill.active { border-color: #B9CDC0; background: var(--soft-green); color: #286B5E; font-weight: 650; }
+  .align-btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .align-tool-btn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; background: #FFFEF9; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .align-tool-btn:hover { background: var(--soft-green); border-color: #B9CDC0; color: #286B5E; }
+  .align-tool-btn .icon { width: 15px; height: 15px; color: var(--green); }
+  .align-tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .text-btn { border: 0; background: none; color: #7B8B74; min-height: 32px; padding: 3px 0 3px 8px; font-size: 11px; }
+  .text-btn:hover { color: var(--green); }
+  .slider-row { min-height: 37px; display: flex; align-items: center; gap: 12px; }
+  .slider-axis { min-width: 35px; font-size: 14px; font-weight: 550; }
+  .slider-axis span { color: #A2AA97; font-size: 10px; margin-left: 4px; }
+  .apple-slider-input { flex: 1; min-width: 0; width: 100%; margin: 0; accent-color: var(--green); height: 28px; cursor: pointer; }
+  .slider-val { font-size: 11px; font-variant-numeric: tabular-nums; min-width: 33px; text-align: center; color: #6F7E67; background: #F1F3E9; padding: 3px 4px; border-radius: 5px; }
+  .color-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .color-chip { width: 100%; height: 44px; min-width: 44px; border: 0; background: transparent; position: relative; border-radius: 7px; }
+  .color-chip:before { content: ''; position: absolute; width: 24px; height: 24px; background: var(--chip); border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .color-chip[aria-pressed="true"]:before { outline: 1px solid var(--ink); outline-offset: 3px; }
+  .color-chip:hover:before { transform: translate(-50%, -50%) scale(1.13); }
+  .scene-card { border-top: 1px solid var(--line); padding-top: 12px; }
+  #objCount { font-weight: 500; color: var(--muted); font-size: 11px; }
+  #clearAllBtn { color: #A88D7B; display: flex; gap: 4px; align-items: center; }
+  #clearAllBtn .icon { width: 13px; height: 13px; }
+  #objList { max-height: 166px; overflow-y: auto; scrollbar-width: thin; }
+  .obj-item-apple { display: flex; align-items: center; gap: 4px; min-height: 44px; border: 1px solid transparent; border-radius: 9px; margin-bottom: 5px; }
+  .obj-item-apple.selected { background: #EEF2E7; border-color: #DAE3D3; }
+  .object-select { background: none; border: 0; flex: 1; text-align: left; min-height: 44px; font-size: 14px; border-radius: 8px; padding: 4px 8px; display: flex; align-items: center; gap: 8px; }
+  .obj-mini-badge { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; }
+  .obj-mini-badge svg { width: 16px; height: 16px; }
+  .obj-del-apple { border: none; background: transparent; min-width: 44px; height: 44px; font-size: 20px; color: #8B9683; border-radius: 8px; }
+  .obj-del-apple:hover { color: var(--accent); background: #F8EBE2; }
+  .obj-empty-apple, #noSelectionHint { font-size: 12px; color: var(--muted); padding: 8px 0; }
+  #objectControls:disabled { opacity: .45; }
+  #noSelectionHint { padding-top: 0; }
+  .net-action-primary { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 11px; background: var(--green); color: white; font-size: 14px; font-weight: 600; margin-top: 12px; }
+  .net-action-primary .icon { width: 16px; height: 16px; }
+  .net-action-primary.playing { background: var(--accent); }
+  .net-action-group { display: flex; gap: 8px; margin-top: 9px; }
+  .net-sub-btn { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; min-height: 44px; border: 1px solid var(--line); background: transparent; border-radius: 10px; font-size: 12px; }
+  .net-sub-btn .icon { width: 16px; height: 16px; }
+  #foldVal { font-size: 11px; color: var(--green); }
+  .fold-endpoints { display: flex; justify-content: space-between; font-size: 10px; color: #8B9382; }
+  .apple-toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 48px; font-size: 13px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .apple-switch { display: flex; align-items: center; min-width: 44px; min-height: 44px; }
+  #showLabelsCheck { appearance: none; position: relative; width: 36px; height: 22px; margin: 0; border-radius: 20px; background: #D9DDD0; cursor: pointer; }
+  #showLabelsCheck:after { content: ''; width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; left: 3px; top: 3px; transition: transform .18s; }
+  #showLabelsCheck:checked { background: var(--green); }
+  #showLabelsCheck:checked:after { transform: translateX(14px); }
+  .edu-callout { background: #F3F1DF; color: #7F7F5F; font-size: 12px; line-height: 1.8; border-radius: 13px; padding: 15px; }
+  .edu-callout b { color: #626B48; font-weight: 650; }
+  .lab-note { padding-top: 21px; margin-top: auto; display: flex; align-items: flex-start; gap: 8px; color: #9A9D8D; font-size: 11px; line-height: 1.7; }
+  .lab-note .icon { width: 17px; height: 17px; margin-top: 1px; color: #B59B68; }
+  .dynamic-toast { position: fixed; bottom: 32px; left: 50%; transform: translate(-50%, 8px); max-width: calc(100vw - 40px); padding: 12px 20px; border-radius: 14px; color: #FFFDF3; background: var(--ink); box-shadow: 0 4px 20px #263C3718; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity .2s, transform .2s; z-index: 100; }
+  .dynamic-toast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 1320px) and (min-width: 1100px) {
+    #app { padding-inline: 20px; } .workspace { gap: 14px; }
+    .mini-compass { display: none; } .nav-note { font-size: 11px; letter-spacing: 0; }
+    .segment-btn { padding-inline: 15px; }
+    .stage-toolbar { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .nav-tools { order: 1; width: 100%; justify-content: center; }
+    .zoom-toolbar { position: static; transform: none; order: 2; margin-top: 2px; }
+  }
+  @media (max-width: 1099px) {
+    #app { min-height: 800px; height: 100dvh; padding: 0 20px 20px; }
+    .nav-bar { min-height: 88px; grid-template-columns: 1fr auto; gap: 16px; }
+    .nav-note { display: none; } .nav-title { font-size: 18px; } .segment-btn { padding-inline: 14px; }
+    .workspace { grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
+    .shape-dock { grid-column: 1 / -1; padding: 11px 12px; border-radius: 17px; display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 8px; }
+    .dock-header { display: block; padding-left: 5px; } .dock-header h2 { font-size: 14px; margin-bottom: 4px; } .count-badge { border: 0; padding: 0; font-size: 10px; }
+    .dock-description, .dock-footer { display: none; }
+    .dock-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 6px; gap: 8px; }
+    .dock-item { min-width: 148px; min-height: 52px; } .shape-name { font-size: 12px; } .dock-icon { width: 30px; height: 30px; }
+    .shape-select { gap: 7px; } .center-column { grid-column: 1; gap: 14px; } .inspector-panel { grid-column: 2; grid-row: 2; padding: 19px 16px; }
+    .stage-header { padding: 19px 20px 0; } #stageShapeName { font-size: 28px; }
+    .stage-bottom { padding: 0 15px 14px; }
+    .stage-toolbar { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .nav-tools { order: 1; width: 100%; justify-content: center; }
+    .zoom-toolbar { position: static; transform: none; order: 2; margin-top: 2px; }
+    .zoom-slider-wrapper { width: 90px; } .mini-compass { display: none; }
+    .tool-btn { font-size: 11px; padding-inline: 9px; } .stage-gesture { font-size: 10px; margin-bottom: 12px; }
+    .bottom-island { padding: 16px; } .fact-tag { font-size: 12px; } .fact { padding-left: 9px; } .island-facts { gap: 7px; }
+  }
+  @media (max-width: 767px) {
+    #app { height: auto; min-height: 100dvh; padding: 0 14px 18px; }
+    .nav-bar { padding: 18px 0; display: flex; flex-wrap: wrap; gap: 17px; }
+    .nav-logo { width: 43px; height: 43px; } .nav-title { font-size: 19px; }
+    .segmented-control { width: 100%; } .segment-btn { flex: 1; padding-inline: 10px; }
+    .workspace { display: flex; flex-direction: column; gap: 14px; }
+    .shape-dock { display: block; padding: 10px; } .dock-header { display: flex; padding: 2px 5px 8px; } .dock-header h2 { margin: 0; }
+    .stage-card { flex: none; } #stageViewport { height: 360px; flex: none; }
+    .stage-tag { display: none; } .stage-header { padding-top: 20px; } .stage-bottom { padding-inline: 12px; }
+    .stage-gesture { margin-top: 0; } .nav-tools { gap: 7px; } .tool-btn { padding-inline: 12px; }
+    .zoom-toolbar { position: static; transform: none; order: 3; width: 100%; justify-content: center; margin-top: 4px; } .zoom-slider-wrapper { width: 140px; }
+    .inspector-panel { overflow: visible; padding: 20px; } .view-grid .preview { height: 70px; }
+    .color-chip { min-width: 36px; } .slider-row { min-height: 44px; } .lab-note { margin-top: 20px; }
+    .knowledge-top { gap: 8px; } .speech-apple-btn { padding-inline: 11px; } .island-emoji { width: 35px; height: 35px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *:before, *:after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="icon-cube" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5"/></symbol><symbol id="icon-net" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8" rx="1"/><path d="M8 8V3h8v5M8 16v5h8v-5M8 8H3v8h5M16 8h5v8h-5"/></symbol><symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="icon-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="icon-rotate" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M17.9 17.9A8 8 0 0 1 4 12"/></symbol><symbol id="icon-reset" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 2.4 8.1M3 4v6h6"/><path d="M12 7v5l3 2"/></symbol><symbol id="icon-wire" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8"/><path stroke-dasharray="2 3" d="M3 16l9-5 9 5M12 3v8"/></symbol><symbol id="icon-move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol><symbol id="icon-sound" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5zM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></symbol><symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol><symbol id="icon-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></symbol><symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="icon-hand" viewBox="0 0 24 24"><path d="M8 12V5a2 2 0 0 1 4 0v6M12 9a2 2 0 0 1 4 0v3M16 10a2 2 0 0 1 4 0v6c0 4-2.5 6-6 6h-1c-2 0-3.5-1-5-3l-5-6a2 2 0 0 1 3-2l2 2"/></symbol><symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></symbol><symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></symbol><symbol id="icon-flat" viewBox="0 0 24 24"><path d="m12 4 10 8-10 8-10-8zM8 8l9 8M7 16l10-8"/></symbol><symbol id="icon-bulb" viewBox="0 0 24 24"><path d="M9 18h6M9 21h6M8 14a7 7 0 1 1 8 0c-1 .7-1 2-1 2H9s0-1.3-1-2"/></symbol><symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol><symbol id="icon-magnet" viewBox="0 0 24 24"><path d="M4 4v7a8 8 0 0 0 16 0V4M4 8h5M15 8h5M4 4h5M15 4h5"/></symbol><symbol id="icon-level" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 7v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol></defs></svg>
+<div id="app" data-mode="3d">
+  <header class="nav-bar">
+    <div class="nav-left"><div class="nav-logo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cube"/></svg></div><div><h1 class="nav-title">3D 几何探险家</h1><p class="brand-caption">LITTLE GEOMETRY LAB</p></div></div>
+    <nav class="segmented-control" aria-label="探索模式">
+      <button class="segment-btn active" id="tab3DMode" type="button" aria-pressed="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cube"/></svg>自由探索</button>
+      <button class="segment-btn" id="tabNetMode" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-net"/></svg>展开图课堂</button>
+    </nav>
+    <div class="nav-note"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-spark"/></svg>小小形状，大大发现</div>
+  </header>
+  <main class="workspace">
+    <aside class="shape-dock" aria-label="图形库">
+      <div class="dock-header"><h2>图形小伙伴</h2><span class="count-badge">16 种</span></div>
+      <p class="dock-description">选一个形状，开始探索</p>
+      <div class="dock-list" id="dockList"><div class="dock-item active" data-shape="cube">
+ <button class="shape-select" type="button" aria-pressed="true" aria-label="选择正方体"><span class="dock-icon lavender"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM12 22V12m0 0l8.7-5M3.3 7L12 12"/></svg></span><span class="shape-name">正方体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="cube" aria-label="添加正方体" title="添加正方体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="box">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择长方体"><span class="dock-icon blue"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 14V9a2 2 0 0 0-1-1.7l-4-2a2 2 0 0 0-2 0L4 10.3c-.6.3-1 1-1 1.7v5c0 .7.4 1.4 1 1.7l4 2a2 2 0 0 0 2 0l10-5c.6-.4 1-1 1-1.7M9 21v-7.5m0 0L20.5 8m-17 3L9 13.5"/></svg></span><span class="shape-name">长方体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="box" aria-label="添加长方体" title="添加长方体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="cylinder">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择圆柱"><span class="dock-icon mint"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 6a7 3 0 1 0 14 0A7 3 0 1 0 5 6"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/></g></svg></span><span class="shape-name">圆柱</span></button>
+ <button class="quick-add-btn" type="button" data-shape="cylinder" aria-label="添加圆柱" title="添加圆柱"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="cone">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择圆锥"><span class="dock-icon peach"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 18v-.5l-8.1-15a1 1 0 0 0-1.8 0L3 17.5v.5C3 19.7 7 21 12 21s9-1.3 9-3"/></svg></span><span class="shape-name">圆锥</span></button>
+ <button class="quick-add-btn" type="button" data-shape="cone" aria-label="添加圆锥" title="添加圆锥"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="pyramid">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择四棱锥"><span class="dock-icon sand"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.1 21.8a2 2 0 0 0 1.8 0l8.1-4c.5-.3.7-1 .4-1.5L12.8 2.5a1 1 0 0 0-1.6 0L2.6 16.3a1 1 0 0 0 .4 1.5zM12 2v20"/></svg></span><span class="shape-name">四棱锥</span></button>
+ <button class="quick-add-btn" type="button" data-shape="pyramid" aria-label="添加四棱锥" title="添加四棱锥"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="prism">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择三棱柱"><span class="dock-icon lavender"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="4,5 20,5 12,9"/><path d="M4 5v11l8 4 8-4V5M12 9v11"/></g></svg></span><span class="shape-name">三棱柱</span></button>
+ <button class="quick-add-btn" type="button" data-shape="prism" aria-label="添加三棱柱" title="添加三棱柱"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="hexPrism">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择六棱柱"><span class="dock-icon peach"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m20.8 7l-3.8 2.6A2 2 0 0 1 15.9 10H8.1a2 2 0 0 1-1.1-.3L3.2 7M8 10v11m8-11v11"/><path d="m3.9 18.3l3.3 2.3A2 2 0 0 0 8.4 21h7.2a2 2 0 0 0 1.2-.4l3.3-2.3c.6-.4.9-1 .9-1.7V7.4c0-.7-.3-1.3-.9-1.7L16.8 3.4A2 2 0 0 0 15.6 3H8.4a2 2 0 0 0-1.2.4L3.9 5.7A2 2 0 0 0 3 7.4v9.2c0 .7.3 1.3.9 1.7"/></g></svg></span><span class="shape-name">六棱柱</span></button>
+ <button class="quick-add-btn" type="button" data-shape="hexPrism" aria-label="添加六棱柱" title="添加六棱柱"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="tetra">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择四面体"><span class="dock-icon mint"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,3 3,17 12,21 21,17"/><line x1="12" y1="3" x2="12" y2="21"/></g></svg></span><span class="shape-name">四面体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="tetra" aria-label="添加四面体" title="添加四面体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="sphere">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择球体"><span class="dock-icon blue"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></g></svg></span><span class="shape-name">球体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="sphere" aria-label="添加球体" title="添加球体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="ellipsoid">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择椭圆体"><span class="dock-icon mint"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M6 12a6 9 0 1 0 12 0a6 9 0 1 0-12 0"/><path d="M6 12c0 1.8 2.7 3.2 6 3.2s6-1.4 6-3.2"/></g></svg></span><span class="shape-name">椭圆体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="ellipsoid" aria-label="添加椭圆体" title="添加椭圆体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="torus">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择圆环"><span class="dock-icon rose"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="4.5"/><ellipse cx="12" cy="12" rx="3" ry="1.5"/></g></svg></span><span class="shape-name">圆环</span></button>
+ <button class="quick-add-btn" type="button" data-shape="torus" aria-label="添加圆环" title="添加圆环"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="capsule">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择胶囊"><span class="dock-icon sand"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9a6 6 0 0 1 6-6a6 6 0 0 1 6 6v6a6 6 0 0 1-6 6a6 6 0 0 1-6-6z"/></svg></span><span class="shape-name">胶囊</span></button>
+ <button class="quick-add-btn" type="button" data-shape="capsule" aria-label="添加胶囊" title="添加胶囊"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="octa">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择八面体"><span class="dock-icon blue"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m12.9 21.7l8.8-9a1 1 0 0 0 0-1.4l-8.8-9a1.2 1.2 0 0 0-1.7 0l-8.8 9a1 1 0 0 0 0 1.4l8.8 9a1.2 1.2 0 0 0 1.7 0z"/><path d="M2 12h20M12 2v20"/></g></svg></span><span class="shape-name">八面体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="octa" aria-label="添加八面体" title="添加八面体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="dodeca">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择十二面体"><span class="dock-icon lavender"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,3 21,9 17.5,19 6.5,19 3,9"/><polygon points="12,9 16.5,11.5 14.5,16.5 9.5,16.5 7.5,11.5"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="21" y1="9" x2="16.5" y2="11.5"/><line x1="17.5" y1="19" x2="14.5" y2="16.5"/><line x1="6.5" y1="19" x2="9.5" y2="16.5"/><line x1="3" y1="9" x2="7.5" y2="11.5"/></g></svg></span><span class="shape-name">十二面体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="dodeca" aria-label="添加十二面体" title="添加十二面体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="icosa">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择二十面体"><span class="dock-icon mint"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M19 6.8a2 2 0 0 1 1 1.8v6.5c0 .7-.4 1.4-1 1.8l-6 3.8a2 2 0 0 1-2 0l-6-3.8a2 2 0 0 1-1-1.8V8.6c0-.7.4-1.4 1-1.8l6-3.5a2 2 0 0 1 2 0l6 3.5z"/><path d="M12 16.5V21M4.5 7.5L8 10m8 0l4-2.5"/></g></svg></span><span class="shape-name">二十面体</span></button>
+ <button class="quick-add-btn" type="button" data-shape="icosa" aria-label="添加二十面体" title="添加二十面体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div>
+<div class="dock-item" data-shape="biconic">
+ <button class="shape-select" type="button" aria-pressed="false" aria-label="选择双锥"><span class="dock-icon peach"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,2 21,12 12,22 3,12"/><line x1="3" y1="12" x2="21" y2="12"/></g></svg></span><span class="shape-name">双锥</span></button>
+ <button class="quick-add-btn" type="button" data-shape="biconic" aria-label="添加双锥" title="添加双锥"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg></button>
+</div></div>
+      <div class="dock-footer"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg>点击加号，放进实验室</div>
+    </aside>
+    <div class="center-column">
+      <section class="stage-card" aria-label="模型展示与操作">
+        <div class="stage-header"><div><p class="eyebrow" id="stageModeLabel">自由探索</p><h2 id="stageShapeName">正方体</h2></div><span class="stage-tag"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-eye"/></svg>360° 观察</span></div>
+        <div id="stageViewport">
+          <canvas id="canvas" aria-label="三维模型，拖动旋转视角，滚轮或双指缩放" tabindex="0" title="键盘：方向键移动，[ / ] 切换物体，Delete 删除"></canvas>
+          <div class="empty-state" id="emptyState" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cube"/></svg><strong>这里，等你来创造</strong><p>点击图形旁的 ＋，放入第一个小伙伴</p></div>
+        </div>
+        <div class="stage-bottom">
+          <p class="stage-gesture"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-hand"/></svg>拖动空白处旋转 · 滚轮或双指缩放</p>
+          <div class="stage-toolbar"><div class="nav-tools" aria-label="观察工具">
+            <button class="tool-btn" id="resetBtn" type="button" title="复位视角与物体"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-reset"/></svg>复位</button>
+            <button class="tool-btn active" id="steadyViewBtn" type="button" aria-pressed="true" title="平稳视角：锁定上下俯仰防倒立，保持正立（关闭后可360°自由无限翻转）"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-level"/></svg>平稳视角</button>
+            <button class="tool-btn" id="rotateBtn" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-rotate"/></svg>旋转</button>
+            <button class="tool-btn" id="wireBtn" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-wire"/></svg>骨架</button>
+            <button class="tool-btn" id="snapBtn" type="button" aria-pressed="false" title="开启磁吸与网格对齐"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-magnet"/></svg>磁吸</button>
+          </div>
+          <div class="zoom-toolbar" id="zoomToolbar" role="group" aria-label="视角缩放调节">
+            <button class="zoom-btn" id="zoomOutBtn" type="button" title="缩小视角 (-)" aria-label="缩小视角">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-minus"/></svg>
+            </button>
+            <div class="zoom-slider-wrapper">
+              <input type="range" class="zoom-slider" id="zoomSlider" min="35" max="250" step="1" value="100" aria-label="视角缩放滑块" />
+            </div>
+            <button class="zoom-btn" id="zoomInBtn" type="button" title="放大视角 (+)" aria-label="放大视角">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-plus"/></svg>
+            </button>
+            <button class="zoom-badge-btn" id="zoomBadgeBtn" type="button" title="点击复位 100% 缩放" aria-label="当前缩放倍率，点击复位100%">100%</button>
+          </div>
+          <div class="mini-compass" aria-label="坐标方向"><div><span class="compass-dot dot-x"></span>X</div><div><span class="compass-dot dot-y"></span>Y</div><div><span class="compass-dot dot-z"></span>Z</div></div></div>
+        </div>
+      </section>
+      <section class="bottom-island" aria-label="图形小知识">
+        <div class="knowledge-top"><div class="island-shape-badge"><span class="island-icon-badge lavender" id="islandShapeIcon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM12 22V12m0 0l8.7-5M3.3 7L12 12"/></svg></span><span class="island-emoji" id="islandEmoji" style="display:none">🟦</span><div><p class="knowledge-kicker" id="knowledgeContext">认识一下</p><h2 class="island-name" id="islandName">正方体</h2></div></div>
+        <button class="speech-apple-btn" id="islandSpeechBtn" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-sound"/></svg><span id="speechLabel">听听看</span></button></div>
+        <div class="island-facts" id="islandFacts"><div class="fact"><span class="fact-label">面 · SURFACES</span><span class="fact-tag" id="factFaces">6 个正方形面</span></div><div class="fact"><span class="fact-label">棱 · EDGES</span><span class="fact-tag" id="factEdges">12 条等长棱</span></div><div class="fact"><span class="fact-label">顶点 · VERTICES</span><span class="fact-tag" id="factVertices">8 个顶点</span></div></div>
+        <p class="fact-example"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bulb"/></svg><span id="factExample">像魔方 · 骰子</span></p>
+      </section>
+    </div>
+    <aside class="inspector-panel" aria-label="观察与调整">
+      <h2 class="panel-section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-eye"/></svg>从不同方向看</h2>
+      <p class="panel-description" id="previewDescription">换个角度，会有什么新发现？</p>
+      <div class="view-grid-card"><div class="view-grid"><button class="view-cell" type="button" data-view="front" aria-label="切换到前面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">前面</span></button>
+<button class="view-cell" type="button" data-view="back" aria-label="切换到后面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">后面</span></button>
+<button class="view-cell" type="button" data-view="top" aria-label="切换到上面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">上面</span></button>
+<button class="view-cell" type="button" data-view="bottom" aria-label="切换到下面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">下面</span></button>
+<button class="view-cell" type="button" data-view="left" aria-label="切换到左面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">左面</span></button>
+<button class="view-cell" type="button" data-view="right" aria-label="切换到右面视角" aria-pressed="false"><span class="preview"><canvas aria-hidden="true"></canvas></span><span class="label">右面</span></button></div></div>
+      <div class="inspector-content">
+        <div id="inspector3DContent">
+          <p id="noSelectionHint" hidden>先添加一个图形，再试着调整它。</p>
+          <fieldset id="objectControls" aria-label="调整选中的图形">
+            <div class="card-box"><h3 class="card-box-title">动一动<span id="posDisplay">原点 (0,0,0)</span></h3><div class="gizmo-segmented"><button class="gizmo-pill active" id="gizmoBtn" type="button" aria-pressed="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-move"/></svg>移动</button><button class="gizmo-pill" id="rotateGizmoBtn" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-rotate"/></svg>旋转</button><button class="gizmo-pill" id="inspectorSnapBtn" type="button" aria-pressed="false" title="开启磁吸与网格对齐"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-magnet"/></svg>磁吸</button></div></div>
+            <div class="card-box" id="quickAlignCard"><div class="card-box-title"><h3 style="font:inherit">对齐与拼合</h3><span style="font-size:10px;color:var(--muted)">选定物体一键对齐</span></div><div class="align-btn-grid"><button class="align-tool-btn" id="alignSnapBtn" type="button" title="吸附贴紧最近物体表面并对齐"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-magnet"/></svg>贴紧旁边</button><button class="align-tool-btn" id="alignFrontBtn" type="button" title="与最近物体前表面平齐"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-arrow"/></svg>前面对齐</button><button class="align-tool-btn" id="alignTopBtn" type="button" title="与最近物体顶面高度平齐"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-spark"/></svg>顶面对齐</button><button class="align-tool-btn" id="alignGroundBtn" type="button" title="底面紧贴地面 Y=0"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-flat"/></svg>平贴地面</button></div></div>
+            <div class="card-box"><div class="card-box-title"><h3 style="font:inherit">调整大小</h3><button id="resetSizeBtn" class="text-btn" type="button">还原尺寸</button></div><div class="slider-row"><label class="slider-axis" for="sizeX">宽 <span>X</span></label><input type="range" class="apple-slider-input" id="sizeX" min="0.2" max="3" step="0.05" value="1"><output class="slider-val" id="sizeXVal" for="sizeX">1.0</output></div><div class="slider-row"><label class="slider-axis" for="sizeY">高 <span>Y</span></label><input type="range" class="apple-slider-input" id="sizeY" min="0.2" max="3" step="0.05" value="1"><output class="slider-val" id="sizeYVal" for="sizeY">1.0</output></div><div class="slider-row"><label class="slider-axis" for="sizeZ">深 <span>Z</span></label><input type="range" class="apple-slider-input" id="sizeZ" min="0.2" max="3" step="0.05" value="1"><output class="slider-val" id="sizeZVal" for="sizeZ">1.0</output></div></div>
+            <div class="card-box"><h3 class="card-box-title">换个颜色</h3><div class="color-chips" id="colorChips"><button class="color-chip" type="button" style="--chip:#5856D6" data-color="0x5856D6" aria-label="紫色" aria-pressed="false" title="紫色"></button><button class="color-chip" type="button" style="--chip:#007AFF" data-color="0x007AFF" aria-label="蓝色" aria-pressed="false" title="蓝色"></button><button class="color-chip" type="button" style="--chip:#34C759" data-color="0x34C759" aria-label="绿色" aria-pressed="false" title="绿色"></button><button class="color-chip" type="button" style="--chip:#FF9500" data-color="0xFF9500" aria-label="橙色" aria-pressed="false" title="橙色"></button><button class="color-chip" type="button" style="--chip:#FF2D55" data-color="0xFF2D55" aria-label="红色" aria-pressed="false" title="红色"></button><button class="color-chip" type="button" style="--chip:#AF52DE" data-color="0xAF52DE" aria-label="粉紫色" aria-pressed="false" title="粉紫色"></button><button class="color-chip" type="button" style="--chip:#00C7BE" data-color="0x00C7BE" aria-label="青绿色" aria-pressed="false" title="青绿色"></button><button class="color-chip" type="button" style="--chip:#FFCC00" data-color="0xFFCC00" aria-label="黄色" aria-pressed="false" title="黄色"></button></div></div>
+          </fieldset>
+          <div class="card-box scene-card"><div class="card-box-title"><h3 style="font:inherit">我的小场景 <span id="objCount">(1)</span></h3><button id="clearAllBtn" class="text-btn" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-trash"/></svg>清空</button></div><div id="objList"></div></div>
+        </div>
+        <div id="inspectorNetContent" style="display:none;">
+          <div class="card-box"><div class="card-box-title"><label for="foldSlider">折一折</label><span id="foldVal">100% (3D实体)</span></div><input type="range" class="apple-slider-input" id="foldSlider" min="0" max="1" step="0.005" value="1"><div class="fold-endpoints"><span>平面展开</span><span>立体合拢</span></div>
+            <button class="net-action-primary" id="playFoldBtn" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-play"/></svg><span id="playFoldLabel">自动折纸动画</span></button>
+            <div class="net-action-group"><button class="net-sub-btn" id="flatNetBtn" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-flat"/></svg>摊平</button><button class="net-sub-btn" id="solidNetBtn" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cube"/></svg>合拢</button></div>
+          </div>
+          <div class="card-box apple-toggle-row"><label for="showLabelsCheck">显示每个面的名称</label><label class="apple-switch" for="showLabelsCheck"><input type="checkbox" id="showLabelsCheck" checked></label></div>
+          <div class="edu-callout" id="netTips"><b>空间小秘诀</b><br>拖动滑块，看看平面的纸片怎样变成立体的盒子。</div>
+        </div>
+      </div>
+      <div class="lab-note"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bulb"/></svg><p>转一转、拉一拉，<br>把形状里的秘密找出来。</p></div>
+    </aside>
+  </main>
+  <div class="dynamic-toast" id="dynamicToast" role="status" aria-live="polite"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
+// ===== 几何立体图形图标与主题配色映射 (保持与导航栏/底部卡片/物体列表 1:1 严格一致) =====
+const SHAPE_ICONS = {
+  cube: {
+    theme: 'lavender',
+    svg: '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM12 22V12m0 0l8.7-5M3.3 7L12 12"/></svg>'
+  },
+  box: {
+    theme: 'blue',
+    svg: '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 14V9a2 2 0 0 0-1-1.7l-4-2a2 2 0 0 0-2 0L4 10.3c-.6.3-1 1-1 1.7v5c0 .7.4 1.4 1 1.7l4 2a2 2 0 0 0 2 0l10-5c.6-.4 1-1 1-1.7M9 21v-7.5m0 0L20.5 8m-17 3L9 13.5"/></svg>'
+  },
+  cylinder: {
+    theme: 'mint',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 6a7 3 0 1 0 14 0A7 3 0 1 0 5 6"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/></g></svg>'
+  },
+  cone: {
+    theme: 'peach',
+    svg: '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 18v-.5l-8.1-15a1 1 0 0 0-1.8 0L3 17.5v.5C3 19.7 7 21 12 21s9-1.3 9-3"/></svg>'
+  },
+  pyramid: {
+    theme: 'sand',
+    svg: '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.1 21.8a2 2 0 0 0 1.8 0l8.1-4c.5-.3.7-1 .4-1.5L12.8 2.5a1 1 0 0 0-1.6 0L2.6 16.3a1 1 0 0 0 .4 1.5zM12 2v20"/></svg>'
+  },
+  prism: {
+    theme: 'lavender',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="4,5 20,5 12,9"/><path d="M4 5v11l8 4 8-4V5M12 9v11"/></g></svg>'
+  },
+  hexPrism: {
+    theme: 'peach',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m20.8 7l-3.8 2.6A2 2 0 0 1 15.9 10H8.1a2 2 0 0 1-1.1-.3L3.2 7M8 10v11m8-11v11"/><path d="m3.9 18.3l3.3 2.3A2 2 0 0 0 8.4 21h7.2a2 2 0 0 0 1.2-.4l3.3-2.3c.6-.4.9-1 .9-1.7V7.4c0-.7-.3-1.3-.9-1.7L16.8 3.4A2 2 0 0 0 15.6 3H8.4a2 2 0 0 0-1.2.4L3.9 5.7A2 2 0 0 0 3 7.4v9.2c0 .7.3 1.3.9 1.7"/></g></svg>'
+  },
+  tetra: {
+    theme: 'mint',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,3 3,17 12,21 21,17"/><line x1="12" y1="3" x2="12" y2="21"/></g></svg>'
+  },
+  sphere: {
+    theme: 'blue',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></g></svg>'
+  },
+  ellipsoid: {
+    theme: 'mint',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M6 12a6 9 0 1 0 12 0a6 9 0 1 0-12 0"/><path d="M6 12c0 1.8 2.7 3.2 6 3.2s6-1.4 6-3.2"/></g></svg>'
+  },
+  torus: {
+    theme: 'rose',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="4.5"/><ellipse cx="12" cy="12" rx="3" ry="1.5"/></g></svg>'
+  },
+  capsule: {
+    theme: 'sand',
+    svg: '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9a6 6 0 0 1 6-6a6 6 0 0 1 6 6v6a6 6 0 0 1-6 6a6 6 0 0 1-6-6z"/></svg>'
+  },
+  octa: {
+    theme: 'blue',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m12.9 21.7l8.8-9a1 1 0 0 0 0-1.4l-8.8-9a1.2 1.2 0 0 0-1.7 0l-8.8 9a1 1 0 0 0 0 1.4l8.8 9a1.2 1.2 0 0 0 1.7 0z"/><path d="M2 12h20M12 2v20"/></g></svg>'
+  },
+  dodeca: {
+    theme: 'lavender',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,3 21,9 17.5,19 6.5,19 3,9"/><polygon points="12,9 16.5,11.5 14.5,16.5 9.5,16.5 7.5,11.5"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="21" y1="9" x2="16.5" y2="11.5"/><line x1="17.5" y1="19" x2="14.5" y2="16.5"/><line x1="6.5" y1="19" x2="9.5" y2="16.5"/><line x1="3" y1="9" x2="7.5" y2="11.5"/></g></svg>'
+  },
+  icosa: {
+    theme: 'mint',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M19 6.8a2 2 0 0 1 1 1.8v6.5c0 .7-.4 1.4-1 1.8l-6 3.8a2 2 0 0 1-2 0l-6-3.8a2 2 0 0 1-1-1.8V8.6c0-.7.4-1.4 1-1.8l6-3.5a2 2 0 0 1 2 0l6 3.5z"/><path d="M12 16.5V21M4.5 7.5L8 10m8 0l4-2.5"/></g></svg>'
+  },
+  biconic: {
+    theme: 'peach',
+    svg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="12,2 21,12 12,22 3,12"/><line x1="3" y1="12" x2="21" y2="12"/></g></svg>'
+  }
+};
+window.SHAPE_ICONS = SHAPE_ICONS;
+
+// ===== 几何知识大百科 (结构化数据) =====
+const SHAPES = {
+  cube: {
+    name: '正方体',
+    emoji: '🟦',
+    faces: '6 个正方形面',
+    vertices: '8 个顶点',
+    edges: '12 条等长棱',
+    example: '像魔方 · 骰子',
+    speech: '正方体！它有 6 个完全相同的正方形面，8 个尖尖的顶点，还有 12 条一样长的棱。生活中我们玩的魔方和骰子就是正方体哦！',
+    color: 0x5856D6,
+    create: () => new THREE.BoxGeometry(1.6, 1.6, 1.6)
+  },
+  box: {
+    name: '长方体',
+    emoji: '📦',
+    faces: '6 个长方形面',
+    vertices: '8 个顶点',
+    edges: '12 条棱',
+    example: '像纸巾盒 · 鞋盒',
+    speech: '长方体！它就像个牛奶箱或者纸巾盒。有 6 个长方形的面，相对的两个面大小和形状一模一样。也有 8 个顶点和 12 条棱！',
+    color: 0x007AFF,
+    create: () => new THREE.BoxGeometry(2.2, 1.0, 1.4)
+  },
+  cylinder: {
+    name: '圆柱',
+    emoji: '🥫',
+    faces: '2个圆底 + 1侧面',
+    vertices: '0 个顶点',
+    edges: '2 条曲棱',
+    example: '像易拉罐 · 铅笔筒',
+    speech: '圆柱！上下是两个完全相同的圆溜溜底面，侧面展开是一个神奇的长方形。长方形的长正好等于底面圆的周长！像不像易拉罐和铅笔筒？',
+    color: 0x00C7BE,
+    create: () => new THREE.CylinderGeometry(0.85, 0.85, 1.6, 48)
+  },
+  cone: {
+    name: '圆锥',
+    emoji: '🔺',
+    faces: '1个圆底 + 1侧面',
+    vertices: '1 个顶点',
+    edges: '1 条曲棱',
+    example: '像生日帽 · 冰淇淋筒',
+    speech: '圆锥！底面是一个圆形，头顶有一个尖尖的顶点。如果把它的侧面剪开铺平，会变成一个漂亮的扇形！就像好吃的冰淇淋蛋筒和生日帽！',
+    color: 0xFF9500,
+    create: () => new THREE.ConeGeometry(0.9, 1.8, 48)
+  },
+  pyramid: {
+    name: '四棱锥',
+    emoji: '🔻',
+    faces: '1底 + 4侧面',
+    vertices: '5 个顶点',
+    edges: '8 条棱',
+    example: '像埃及金字塔',
+    speech: '四棱锥！底面是一个正方形，四周是 4 个三角形侧面，在顶峰聚成一个尖角。就像闻名世界的埃及大金字塔！',
+    color: 0xFFCC00,
+    create: () => new THREE.ConeGeometry(1.2, 1.8, 4)
+  },
+  prism: {
+    name: '三棱柱',
+    emoji: '💎',
+    faces: '2底 + 3侧面',
+    vertices: '6 个顶点',
+    edges: '9 条棱',
+    example: '像三角巧克力',
+    speech: '三棱柱！上下两个底面是三角形，旁边是 3 个长方形侧面。就像美味的瑞士三角巧克力！',
+    color: 0xAF52DE,
+    create: () => new THREE.CylinderGeometry(1, 1, 1.6, 3)
+  },
+  tetra: {
+    name: '四面体',
+    emoji: '🔺',
+    faces: '4 个等边三角形',
+    vertices: '4 个顶点',
+    edges: '6 条棱',
+    example: '最稳固多面体',
+    speech: '正四面体！它是世界上最简单的多面体，只有 4 个三角形的面，非常稳固，怎么推都立得很稳！',
+    color: 0x34C759,
+    create: () => new THREE.TetrahedronGeometry(1.3)
+  },
+  sphere: {
+    name: '球体',
+    emoji: '⚽',
+    faces: '曲面立体',
+    vertices: '0 个顶点',
+    edges: '0 条棱',
+    example: '像足球 · 地球仪',
+    speech: '球体！圆滚滚的，无论从哪一个方向看都是完美的圆形。它没有棱也没有尖角，可以向任何方向自由滚动！',
+    color: 0x30B0C7,
+    create: () => new THREE.SphereGeometry(1, 48, 48)
+  },
+  ellipsoid: {
+    name: '椭圆体',
+    emoji: '🥚',
+    faces: '光滑曲面',
+    vertices: '0 个顶点',
+    edges: '0 条棱',
+    example: '像小鸡蛋 · 橄榄球',
+    speech: '椭圆体！它就像一颗可爱的小鸡蛋，是拉长变形后的球球，摸起来光滑圆润没有棱角。',
+    color: 0x34C759,
+    create: () => new THREE.SphereGeometry(1, 48, 48).scale(1.3, 0.85, 1.0)
+  },
+  hexPrism: {
+    name: '六棱柱',
+    emoji: '🪖',
+    faces: '2底 + 6侧面',
+    vertices: '12 个顶点',
+    edges: '18 条棱',
+    example: '像木质六角铅笔',
+    speech: '六棱柱！上下两个底面是六边形，四周有 6 个长方形侧面。削好的木质铅笔就是标准的六棱柱哦！',
+    color: 0xFF2D55,
+    create: () => new THREE.CylinderGeometry(1, 1, 1.6, 6)
+  },
+  torus: {
+    name: '圆环',
+    emoji: '🍩',
+    faces: '环形曲面',
+    vertices: '0 个顶点',
+    edges: '0 条棱',
+    example: '像甜甜圈 · 游泳圈',
+    speech: '圆环！像不像香甜诱人的甜甜圈，或者水上乐园的游泳圈？它的中间有一个圆圆的洞。',
+    color: 0xFF375F,
+    create: () => new THREE.TorusGeometry(1, 0.4, 24, 64)
+  },
+  capsule: {
+    name: '胶囊',
+    emoji: '💊',
+    faces: '圆柱接半球',
+    vertices: '0 个顶点',
+    edges: '0 条棱',
+    example: '像药丸胶囊',
+    speech: '胶囊体！中间是圆柱，两头各连接一个光滑的半球，就像医生阿姨开的胶囊小药丸。',
+    color: 0xFF9500,
+    create: () => new THREE.CapsuleGeometry(0.6, 1.0, 16, 32)
+  },
+  octa: {
+    name: '八面体',
+    emoji: '💠',
+    faces: '8 个等边三角形',
+    vertices: '6 个顶点',
+    edges: '12 条棱',
+    example: '像两金字塔拼接',
+    speech: '八面体！由 8 个等边三角形组成，就像两个埃及金字塔底对底合在一起，像一颗璀璨的钻石晶体！',
+    color: 0x5856D6,
+    create: () => new THREE.OctahedronGeometry(1.2)
+  },
+  dodeca: {
+    name: '十二面体',
+    emoji: '🔸',
+    faces: '12 个正五边形',
+    vertices: '20 个顶点',
+    edges: '30 条棱',
+    example: '像经典足球皮块',
+    speech: '正十二面体！由 12 个正五边形组成，就像经典足球表面的拼块一样，极具数学对称之美！',
+    color: 0xFF9500,
+    create: () => new THREE.DodecahedronGeometry(1.1)
+  },
+  icosa: {
+    name: '二十面体',
+    emoji: '🔹',
+    faces: '20 个等边三角形',
+    vertices: '12 个顶点',
+    edges: '30 条棱',
+    example: '最接近球的多面体',
+    speech: '正二十面体！由 20 个等边三角形组合而成，是所有正多面体中最圆、最接近球体的立体！',
+    color: 0x00C7BE,
+    create: () => new THREE.IcosahedronGeometry(1.15)
+  },
+  biconic: {
+    name: '双锥',
+    emoji: '⏳',
+    faces: '两个圆锥底对底',
+    vertices: '2 个尖顶',
+    edges: '1 条中心圆棱',
+    example: '像古代计时沙漏',
+    speech: '双锥！两个圆锥尖对尖相连，就像古代用来计算时间的流动沙漏。',
+    color: 0xAF52DE,
+    create: () => {
+      const pts = [new THREE.Vector2(0, 1.2), new THREE.Vector2(1, 0), new THREE.Vector2(0, -1.2)];
+      return new THREE.LatheGeometry(pts, 32);
+    }
+  }
+};
+
+// 全局模式
+let currentMode = '3d';
+let currentShapeKey = 'cube';
+let isWireframe = false;
+let isSpeaking = false;
+let isSnapping = false;
+let activeUtterance = null;
+let activeAudio = null;
+const VOICE_DIR = './vioce/';
+
+// ===== 本地 MP3 语音朗读 =====
+function updateSpeechButton(speaking) {
+  const button = document.getElementById('islandSpeechBtn');
+  if (!button) return;
+  const label = document.getElementById('speechLabel');
+  button.classList.toggle('speaking', speaking);
+  button.setAttribute('aria-pressed', String(speaking));
+  if (label) label.textContent = speaking ? '停止朗读' : '听听看';
+}
+
+function finishSpeech(status = '', utterance = null) {
+  if (utterance && activeUtterance !== utterance) return;
+  const audio = utterance?.audio || activeAudio;
+  if (audio) {
+    audio.pause();
+    try { audio.currentTime = 0; } catch {}
+  }
+  activeUtterance = null;
+  activeAudio = null;
+  isSpeaking = false;
+  updateSpeechButton(false);
+  if (status) showToast(status);
+}
+
+function cancelSpeech(status = '') {
+  if (activeAudio) {
+    activeAudio.pause();
+    try { activeAudio.currentTime = 0; } catch {}
+  }
+  activeAudio = null;
+  activeUtterance = null;
+  isSpeaking = false;
+  updateSpeechButton(false);
+  if (status) showToast(status);
+}
+
+function speakCurrentShape() {
+  if (typeof Audio !== 'function') {
+    showToast('当前浏览器不支持音频播放 🔇');
+    return;
+  }
+  const def = SHAPES[currentShapeKey];
+  if (!def) return;
+
+  if (activeUtterance) cancelSpeech();
+  const audio = new Audio(`${VOICE_DIR}${currentShapeKey}.mp3`);
+  audio.preload = 'auto';
+  const playback = { audio, onend: null, onerror: null };
+  playback.onend = () => finishSpeech('朗读完成 ✅', playback);
+  playback.onerror = () => finishSpeech('朗读出错，请检查音频文件 🔇', playback);
+
+  activeUtterance = playback;
+  activeAudio = audio;
+  isSpeaking = true;
+  updateSpeechButton(true);
+
+  audio.addEventListener('ended', playback.onend, { once: true });
+  audio.addEventListener('error', playback.onerror, { once: true });
+  const playRequest = audio.play();
+  if (playRequest?.catch) {
+    playRequest.catch(() => {
+      if (activeUtterance === playback) playback.onerror();
+    });
+  }
+}
+
+function toggleSpeech() {
+  if (isSpeaking) {
+    cancelSpeech('已暂停朗读 ✋');
+  } else {
+    speakCurrentShape();
+  }
+}
+document.getElementById('islandSpeechBtn')?.addEventListener('click', toggleSpeech);
+updateSpeechButton(false);
+
+// ===== Three.js 主场景 =====
+const canvas = document.getElementById('canvas');
+const stageViewport = document.getElementById('stageViewport') || canvas.parentElement;
+
+function measureElement(element, fallbackElement = null) {
+  const rect = element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || element?.clientWidth || fallbackElement?.clientWidth || 1));
+  const height = Math.max(1, Math.round(rect?.height || element?.clientHeight || fallbackElement?.clientHeight || 1));
+  return { width, height };
+}
+
+const stageSize = measureElement(stageViewport, canvas);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(stageSize.width, stageSize.height, false);
+
+const scene = new THREE.Scene();
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(50, stageSize.width / stageSize.height, 0.1, 100);
+camera.position.set(2.8, 2.2, 3.5);
+
+// ===== 360° 自由多维轨道控制器 (无极角死锁，支持上下如滚轮般 360° 无限翻转) =====
+class FreeOrbitControls {
+  constructor(object, domElement) {
+    this.object = object;
+    this.domElement = domElement;
+    this.target = new THREE.Vector3(0, 0.85, 0);
+    this.object.lookAt(this.target);
+    this.minDistance = 1.5;
+    this.maxDistance = 16;
+    this.enableDamping = true;
+    this.dampingFactor = 0.08;
+    this.autoRotate = false;
+    this.autoRotateSpeed = 1.2;
+    this.enabled = true;
+    this.rotateSpeed = 1.0;
+    this.zoomSpeed = 1.0;
+    this.panSpeed = 1.0;
+
+    this._steadyView = true;
+    this._minPolarAngle = 0.01;
+    this._maxPolarAngle = Math.PI - 0.01;
+
+    this._listeners = {};
+    this._pointers = new Map();
+    this._isDragging = false;
+    this._dragMode = 'none'; // 'rotate', 'pan', 'pinch'
+    this._prevPointer = { x: 0, y: 0 };
+    this._prevPinchDist = 0;
+    this._velocity = { x: 0, y: 0 };
+
+    this._onPointerDown = this._onPointerDown.bind(this);
+    this._onPointerMove = this._onPointerMove.bind(this);
+    this._onPointerUp = this._onPointerUp.bind(this);
+    this._onWheel = this._onWheel.bind(this);
+    this._onContextMenu = (e) => e.preventDefault();
+
+    this.domElement.addEventListener('pointerdown', this._onPointerDown);
+    window.addEventListener('pointermove', this._onPointerMove);
+    window.addEventListener('pointerup', this._onPointerUp);
+    window.addEventListener('pointercancel', this._onPointerUp);
+    this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
+    this.domElement.addEventListener('contextmenu', this._onContextMenu);
+  }
+
+  get steadyView() { return this._steadyView !== false; }
+  set steadyView(v) { this._steadyView = Boolean(v); }
+  get minPolarAngle() { return this._minPolarAngle; }
+  set minPolarAngle(v) { this._minPolarAngle = v; }
+  get maxPolarAngle() { return this._maxPolarAngle; }
+  set maxPolarAngle(v) { this._maxPolarAngle = v; }
+  get enableRotate() { return true; }
+  set enableRotate(_) {}
+  get enableZoom() { return true; }
+  set enableZoom(_) {}
+  get enablePan() { return true; }
+  set enablePan(_) {}
+
+  resetUpVector() {
+    const offset = this.object.position.clone().sub(this.target);
+    const radius = Math.max(1e-4, offset.length());
+    const hDist = Math.hypot(offset.x, offset.z);
+    let theta = hDist > 1e-4 ? Math.atan2(offset.x, offset.z) : 0;
+    let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)));
+
+    const minP = this._minPolarAngle || 0.01;
+    const maxP = this._maxPolarAngle || (Math.PI - 0.01);
+    phi = Math.max(minP, Math.min(maxP, phi));
+
+    const sinPhiRadius = Math.sin(phi) * radius;
+    offset.x = sinPhiRadius * Math.sin(theta);
+    offset.y = Math.cos(phi) * radius;
+    offset.z = sinPhiRadius * Math.cos(theta);
+
+    this.object.position.copy(this.target).add(offset);
+    this.object.up.set(0, 1, 0);
+    this.object.lookAt(this.target);
+    this._velocity.x = 0;
+    this._velocity.y = 0;
+  }
+
+  addEventListener(type, listener) {
+    if (!this._listeners[type]) this._listeners[type] = [];
+    this._listeners[type].push(listener);
+  }
+  removeEventListener(type, listener) {
+    if (!this._listeners[type]) return;
+    this._listeners[type] = this._listeners[type].filter(l => l !== listener);
+  }
+  dispatchEvent(event) {
+    const list = this._listeners[event.type];
+    if (list) list.forEach(l => l(event));
+  }
+
+  _onPointerDown(e) {
+    if (!this.enabled) return;
+    this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (this._pointers.size === 1) {
+      this._isDragging = true;
+      this._dragMode = (e.button === 2 || e.shiftKey) ? 'pan' : 'rotate';
+      this._prevPointer = { x: e.clientX, y: e.clientY };
+      this._velocity = { x: 0, y: 0 };
+      if (e.button === 0 || e.button === 2 || e.pointerType === 'touch') {
+        if (typeof showPivotMarker === 'function') showPivotMarker();
+      }
+      this.dispatchEvent({ type: 'start' });
+    } else if (this._pointers.size === 2) {
+      this._dragMode = 'pinch';
+      const [p1, p2] = Array.from(this._pointers.values());
+      this._prevPinchDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      this._prevPointer = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    }
+  }
+
+  _onPointerMove(e) {
+    if (!this.enabled || !this._isDragging) return;
+    if (this._pointers.has(e.pointerId)) {
+      this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    const h = this.domElement.clientHeight || window.innerHeight || 400;
+
+    if (this._dragMode === 'rotate' && this._pointers.size === 1) {
+      const dx = e.clientX - this._prevPointer.x;
+      const dy = e.clientY - this._prevPointer.y;
+      this._prevPointer = { x: e.clientX, y: e.clientY };
+
+      const deltaX = (2 * Math.PI * dx / h) * this.rotateSpeed * 0.5;
+      const deltaY = (2 * Math.PI * dy / h) * this.rotateSpeed * 0.5;
+
+      this._rotate(deltaX, deltaY);
+      if (this.enableDamping) {
+        this._velocity.x = deltaX;
+        this._velocity.y = deltaY;
+      }
+      this.dispatchEvent({ type: 'change' });
+    } else if (this._dragMode === 'pan' && this._pointers.size === 1) {
+      const dx = e.clientX - this._prevPointer.x;
+      const dy = e.clientY - this._prevPointer.y;
+      this._prevPointer = { x: e.clientX, y: e.clientY };
+      this._pan(dx, dy);
+      this.dispatchEvent({ type: 'change' });
+    } else if (this._dragMode === 'pinch' && this._pointers.size === 2) {
+      const [p1, p2] = Array.from(this._pointers.values());
+      const curDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      if (this._prevPinchDist > 0 && curDist > 0) {
+        const factor = this._prevPinchDist / curDist;
+        this._dolly(factor);
+        this._prevPinchDist = curDist;
+        this.dispatchEvent({ type: 'change' });
+      }
+      const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+      const panDx = midX - this._prevPointer.x;
+      const panDy = midY - this._prevPointer.y;
+      this._prevPointer = { x: midX, y: midY };
+      if (Math.abs(panDx) > 0.5 || Math.abs(panDy) > 0.5) {
+        this._pan(panDx, panDy);
+        this.dispatchEvent({ type: 'change' });
+      }
+    }
+  }
+
+  _onPointerUp(e) {
+    this._pointers.delete(e.pointerId);
+    if (this._pointers.size === 0) {
+      this._isDragging = false;
+      this._dragMode = 'none';
+      if (typeof hidePivotMarker === 'function') hidePivotMarker();
+      this.dispatchEvent({ type: 'end' });
+    } else if (this._pointers.size === 1) {
+      this._dragMode = 'rotate';
+      const [p] = Array.from(this._pointers.values());
+      this._prevPointer = { x: p.x, y: p.y };
+      this._velocity = { x: 0, y: 0 };
+    }
+  }
+
+  _onWheel(e) {
+    if (!this.enabled) return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 0.95 : 1.05;
+    this.dispatchEvent({ type: 'start' });
+    this._dolly(factor);
+    this.dispatchEvent({ type: 'change' });
+    this.dispatchEvent({ type: 'end' });
+  }
+
+  _rotate(deltaX, deltaY) {
+    if (this.steadyView) {
+      const offset = this.object.position.clone().sub(this.target);
+      const radius = Math.max(1e-4, offset.length());
+      const hDist = Math.hypot(offset.x, offset.z);
+      let theta = hDist > 1e-4 ? Math.atan2(offset.x, offset.z) : 0;
+      let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)));
+
+      theta -= deltaX;
+      phi -= deltaY;
+
+      const minP = this._minPolarAngle || 0.01;
+      const maxP = this._maxPolarAngle || (Math.PI - 0.01);
+      if (phi <= minP) {
+        phi = minP;
+        this._velocity.y = 0;
+      } else if (phi >= maxP) {
+        phi = maxP;
+        this._velocity.y = 0;
+      }
+
+      const sinPhiRadius = Math.sin(phi) * radius;
+      offset.x = sinPhiRadius * Math.sin(theta);
+      offset.y = Math.cos(phi) * radius;
+      offset.z = sinPhiRadius * Math.cos(theta);
+
+      this.object.position.copy(this.target).add(offset);
+      this.object.up.set(0, 1, 0);
+      this.object.lookAt(this.target);
+      return;
+    }
+
+    const offset = this.object.position.clone().sub(this.target);
+    const dist = offset.length();
+    if (dist < 1e-4) return;
+
+    const dir = this.target.clone().sub(this.object.position).normalize();
+    let right = new THREE.Vector3().crossVectors(dir, this.object.up).normalize();
+    if (right.lengthSq() < 1e-4) {
+      right.set(1, 0, 0).cross(dir).normalize();
+      if (right.lengthSq() < 1e-4) right.set(0, 0, 1).cross(dir).normalize();
+    }
+    const up = new THREE.Vector3().crossVectors(right, dir).normalize();
+
+    const qY = new THREE.Quaternion().setFromAxisAngle(right, -deltaY);
+    const qX = new THREE.Quaternion().setFromAxisAngle(up, -deltaX);
+    const q = new THREE.Quaternion().multiplyQuaternions(qX, qY);
+
+    offset.applyQuaternion(q);
+    this.object.position.copy(this.target).add(offset);
+    this.object.up.applyQuaternion(q).normalize();
+    this.object.lookAt(this.target);
+  }
+
+  _dolly(factor) {
+    const offset = this.object.position.clone().sub(this.target);
+    let dist = offset.length() * factor;
+    dist = Math.max(this.minDistance, Math.min(this.maxDistance, dist));
+    offset.normalize().multiplyScalar(dist);
+    this.object.position.copy(this.target).add(offset);
+    this.object.lookAt(this.target);
+  }
+
+  _pan(deltaX, deltaY) {
+    const offset = this.object.position.clone().sub(this.target);
+    const dist = offset.length();
+    const factor = dist * 0.002 * this.panSpeed;
+
+    const dir = this.target.clone().sub(this.object.position).normalize();
+    let right = new THREE.Vector3().crossVectors(dir, this.object.up).normalize();
+    if (right.lengthSq() < 1e-4) {
+      right.set(1, 0, 0).cross(dir).normalize();
+    }
+    const up = new THREE.Vector3().crossVectors(right, dir).normalize();
+
+    const panVector = new THREE.Vector3()
+      .addScaledVector(right, -deltaX * factor)
+      .addScaledVector(up, deltaY * factor);
+
+    this.target.add(panVector);
+    this.object.position.add(panVector);
+  }
+
+  update() {
+    let changed = false;
+    if (this.autoRotate && !this._isDragging) {
+      const deltaX = (2 * Math.PI / 60 / 60) * this.autoRotateSpeed;
+      this._rotate(deltaX, 0);
+      changed = true;
+    } else if (this.enableDamping && !this._isDragging) {
+      if (Math.abs(this._velocity.x) > 1e-5 || Math.abs(this._velocity.y) > 1e-5) {
+        this._rotate(this._velocity.x, this._velocity.y);
+        this._velocity.x *= (1 - this.dampingFactor);
+        this._velocity.y *= (1 - this.dampingFactor);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.dispatchEvent({ type: 'change' });
+    }
+  }
+
+  dispose() {
+    this.domElement.removeEventListener('pointerdown', this._onPointerDown);
+    window.removeEventListener('pointermove', this._onPointerMove);
+    window.removeEventListener('pointerup', this._onPointerUp);
+    window.removeEventListener('pointercancel', this._onPointerUp);
+    this.domElement.removeEventListener('wheel', this._onWheel);
+    this.domElement.removeEventListener('contextmenu', this._onContextMenu);
+  }
+}
+
+const controls = new FreeOrbitControls(camera, canvas);
+
+// ===== 旋转中心点视觉指示器 (点击/拖拽鼠标左键时显现) =====
+const pivotMarker = new THREE.Group();
+pivotMarker.name = 'rotationPivotMarker';
+pivotMarker.renderOrder = 9999;
+pivotMarker.visible = false;
+
+// 1. 核心圆球 (亮珊瑚橙红，穿透透视)
+const pivotCoreGeo = new THREE.SphereGeometry(0.08, 20, 20);
+const pivotCoreMat = new THREE.MeshBasicMaterial({
+  color: 0xff3b30,
+  depthTest: false,
+  depthWrite: false,
+  transparent: true,
+  opacity: 0.95
+});
+const pivotCore = new THREE.Mesh(pivotCoreGeo, pivotCoreMat);
+pivotCore.renderOrder = 9999;
+pivotMarker.add(pivotCore);
+
+// 2. 高亮白心准星
+const pivotPinGeo = new THREE.SphereGeometry(0.035, 16, 16);
+const pivotPinMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  depthTest: false,
+  depthWrite: false
+});
+const pivotPin = new THREE.Mesh(pivotPinGeo, pivotPinMat);
+pivotPin.renderOrder = 10000;
+pivotMarker.add(pivotPin);
+
+// 3. 动态外光环
+const pivotRingGeo = new THREE.RingGeometry(0.14, 0.17, 36);
+const pivotRingMat = new THREE.MeshBasicMaterial({
+  color: 0xff9500,
+  side: THREE.DoubleSide,
+  depthTest: false,
+  depthWrite: false,
+  transparent: true,
+  opacity: 0.9
+});
+const pivotRing = new THREE.Mesh(pivotRingGeo, pivotRingMat);
+pivotRing.renderOrder = 9999;
+pivotMarker.add(pivotRing);
+
+// 4. 四向准星刻度线
+const pivotTickMat = new THREE.LineBasicMaterial({
+  color: 0xffffff,
+  depthTest: false,
+  depthWrite: false,
+  transparent: true,
+  opacity: 0.85
+});
+const pivotTickPoints = [
+  new THREE.Vector3(-0.26, 0, 0), new THREE.Vector3(-0.17, 0, 0),
+  new THREE.Vector3(0.17, 0, 0), new THREE.Vector3(0.26, 0, 0),
+  new THREE.Vector3(0, -0.26, 0), new THREE.Vector3(0, -0.17, 0),
+  new THREE.Vector3(0, 0.17, 0), new THREE.Vector3(0, 0.26, 0)
+];
+const pivotTickGeo = new THREE.BufferGeometry().setFromPoints(pivotTickPoints);
+const pivotTicks = new THREE.LineSegments(pivotTickGeo, pivotTickMat);
+pivotTicks.renderOrder = 10000;
+pivotMarker.add(pivotTicks);
+
+scene.add(pivotMarker);
+
+let pivotTargetOpacity = 0;
+let pivotCurrentOpacity = 0;
+let pivotHideTimeout = null;
+
+function showPivotMarker() {
+  clearTimeout(pivotHideTimeout);
+  pivotMarker.visible = true;
+  pivotMarker.position.copy(controls.target);
+  pivotMarker.quaternion.copy(camera.quaternion);
+  pivotTargetOpacity = 1;
+}
+
+function hidePivotMarker(immediate = false) {
+  if (immediate) {
+    clearTimeout(pivotHideTimeout);
+    pivotTargetOpacity = 0;
+    pivotCurrentOpacity = 0;
+    pivotMarker.visible = false;
+    return;
+  }
+  clearTimeout(pivotHideTimeout);
+  pivotHideTimeout = setTimeout(() => {
+    pivotTargetOpacity = 0;
+  }, 160);
+}
+
+function updatePivotMarker() {
+  if (!pivotMarker.visible) return;
+  pivotMarker.position.copy(controls.target);
+  pivotMarker.quaternion.copy(camera.quaternion);
+
+  const dist = camera.position.distanceTo(controls.target);
+  const visualScale = THREE.MathUtils.clamp(dist / 5.5, 0.4, 2.5);
+  pivotMarker.scale.setScalar(visualScale);
+
+  pivotCurrentOpacity += (pivotTargetOpacity - pivotCurrentOpacity) * 0.22;
+  pivotCoreMat.opacity = 0.95 * pivotCurrentOpacity;
+  pivotRingMat.opacity = 0.9 * pivotCurrentOpacity;
+  pivotTickMat.opacity = 0.85 * pivotCurrentOpacity;
+
+  if (pivotTargetOpacity <= 0.01 && pivotCurrentOpacity <= 0.02) {
+    pivotMarker.visible = false;
+    pivotCurrentOpacity = 0;
+  }
+}
+
+window.pivotMarker = pivotMarker;
+window.showPivotMarker = showPivotMarker;
+window.hidePivotMarker = hidePivotMarker;
+
+// ===== 视角缩放控制体系 =====
+const DEFAULT_CAMERA_POS = new THREE.Vector3(2.8, 2.2, 3.5);
+const DEFAULT_CAMERA_TARGET = new THREE.Vector3(0, 0.85, 0);
+const DEFAULT_CAMERA_DIST = DEFAULT_CAMERA_POS.distanceTo(DEFAULT_CAMERA_TARGET);
+const MIN_ZOOM_PERCENT = 35;
+const MAX_ZOOM_PERCENT = 250;
+
+function getZoomFromCamera() {
+  const dist = camera.position.distanceTo(controls.target);
+  if (dist < 1e-4) return 100;
+  return Math.round((DEFAULT_CAMERA_DIST / dist) * 100);
+}
+
+function syncZoomUI(zoomValue = null) {
+  const z = zoomValue !== null ? Math.round(zoomValue) : getZoomFromCamera();
+  const clamped = THREE.MathUtils.clamp(z, MIN_ZOOM_PERCENT, MAX_ZOOM_PERCENT);
+  const zoomSlider = document.getElementById('zoomSlider');
+  const zoomBadgeBtn = document.getElementById('zoomBadgeBtn');
+  if (zoomSlider && document.activeElement !== zoomSlider) {
+    zoomSlider.value = String(clamped);
+  }
+  if (zoomBadgeBtn) {
+    zoomBadgeBtn.textContent = `${clamped}%`;
+  }
+}
+
+function setZoom(zoomPercent) {
+  const clamped = THREE.MathUtils.clamp(zoomPercent, MIN_ZOOM_PERCENT, MAX_ZOOM_PERCENT);
+  const targetDist = DEFAULT_CAMERA_DIST / (clamped / 100);
+  const dir = camera.position.clone().sub(controls.target);
+  if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+  else dir.normalize();
+  camera.position.copy(controls.target).addScaledVector(dir, targetDist);
+  camera.updateMatrixWorld();
+  controls.update();
+  syncZoomUI(clamped);
+}
+
+controls.addEventListener('change', () => {
+  syncZoomUI();
+});
+
+// 苹果纯净自然布光
+const ambient = new THREE.AmbientLight(0xffffff, 2.1);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0xffffff, 3);
+dirLight.position.set(6, 10, 6);
+scene.add(dirLight);
+const dirLight2 = new THREE.DirectionalLight(0xffefd8, 0.6);
+dirLight2.position.set(-5, -2, -4);
+scene.add(dirLight2);
+
+// 柔和微底网格与数学地平面 (Y = 0)
+const grid = new THREE.GridHelper(24, 24, 0x9FB3A6, 0xDEDACF);
+grid.position.y = 0;
+grid.material.opacity = 0.3;
+grid.material.transparent = true;
+scene.add(grid);
+
+// ===== 柔和贴地接触阴影 (Contact Shadow) =====
+let contactShadowTex = null;
+function getContactShadowTexture() {
+  if (contactShadowTex) return contactShadowTex;
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 256;
+  const ctx = cv.getContext('2d');
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(25, 32, 45, 0.45)');
+  grad.addColorStop(0.3, 'rgba(25, 32, 45, 0.22)');
+  grad.addColorStop(0.65, 'rgba(25, 32, 45, 0.06)');
+  grad.addColorStop(1, 'rgba(25, 32, 45, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+  contactShadowTex = new THREE.CanvasTexture(cv);
+  return contactShadowTex;
+}
+const shadowPlaneGeo = new THREE.PlaneGeometry(1, 1);
+
+// ===== 3D 物体管理 =====
+const objects = [];
+window.objects = objects;
+window.THREE = THREE;
+window.scene = scene;
+window.renderer = renderer;
+window.camera = camera;
+window.controls = controls;
+window.setZoom = setZoom;
+window.getZoomFromCamera = getZoomFromCamera;
+let nextObjId = 1;
+let selectedObj = null;
+
+function setPressed(button, pressed) {
+  if (button) button.setAttribute('aria-pressed', String(pressed));
+}
+
+function updateDockSelection(key) {
+  document.querySelectorAll('.dock-item').forEach(item => {
+    const button = item.querySelector('.shape-select');
+    const itemKey = item.dataset.shape || button?.dataset.shape;
+    const active = itemKey === key;
+    item.classList.toggle('active', active);
+    if (button) button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function updateStageLabels() {
+  const app = document.getElementById('app');
+  const shapeName = document.getElementById('stageShapeName');
+  const modeLabel = document.getElementById('stageModeLabel');
+  if (app) app.dataset.mode = currentMode;
+  if (shapeName) {
+    const displayedName = currentMode === '3d'
+      ? (selectedObj?.def?.name || '自由搭建')
+      : SHAPES[currentShapeKey]?.name;
+    if (displayedName) shapeName.textContent = displayedName;
+  }
+  if (modeLabel) modeLabel.textContent = currentMode === '3d' ? '自由探索' : '展开图课堂';
+  const previewing = currentMode === '3d' && currentShapeKey !== selectedObj?.key;
+  document.getElementById('knowledgeContext').textContent = previewing ? '图形预览 · 点击＋添加' : '认识一下';
+  document.getElementById('previewDescription').textContent = previewing
+    ? `正在预览：${SHAPES[currentShapeKey].name}` : '换个角度，会有什么新发现？';
+}
+
+function updateColorChipState() {
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    const color = parseInt(chip.dataset.color);
+    const active = Boolean(selectedObj && selectedObj.mesh.material.color.getHex() === color);
+    chip.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function updateInspectorState() {
+  const emptyState = document.getElementById('emptyState');
+  const objectControls = document.getElementById('objectControls');
+  const noSelectionHint = document.getElementById('noSelectionHint');
+  if (emptyState) emptyState.hidden = !(currentMode === '3d' && objects.length === 0);
+  if (objectControls) objectControls.disabled = !(currentMode === '3d' && selectedObj);
+  if (noSelectionHint) noSelectionHint.hidden = Boolean(selectedObj);
+
+  const alignSnapBtn = document.getElementById('alignSnapBtn');
+  const alignFrontBtn = document.getElementById('alignFrontBtn');
+  const alignTopBtn = document.getElementById('alignTopBtn');
+  const alignGroundBtn = document.getElementById('alignGroundBtn');
+  const hasMultiple = (currentMode === '3d' && Boolean(selectedObj) && objects.length >= 2);
+  const hasSelection = (currentMode === '3d' && Boolean(selectedObj));
+
+  if (alignSnapBtn) alignSnapBtn.disabled = !hasMultiple;
+  if (alignFrontBtn) alignFrontBtn.disabled = !hasMultiple;
+  if (alignTopBtn) alignTopBtn.disabled = !hasMultiple;
+  if (alignGroundBtn) alignGroundBtn.disabled = !hasSelection;
+
+  updateColorChipState();
+  updateStageLabels();
+}
+
+function syncDisplayedShape(key) {
+  const actualKey = SHAPES[key] ? key : 'cube';
+  if (actualKey !== currentShapeKey && isSpeaking) cancelSpeech();
+  currentShapeKey = actualKey;
+  updateDockSelection(actualKey);
+  updateIslandInfo(SHAPES[actualKey], actualKey);
+  updateStageLabels();
+  return actualKey;
+}
+
+let selectionBox = null;
+function ensureSelectionBox() {
+  if (selectionBox) return;
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  const edges = new THREE.EdgesGeometry(geo);
+  selectionBox = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x287D70, linewidth: 2 }));
+  selectionBox.visible = false;
+  scene.add(selectionBox);
+  window.selectionBox = selectionBox;
+}
+
+function addShape(key, position = null) {
+  const def = SHAPES[key];
+  const geo = def.create();
+
+  // 关键数学对齐：将几何体顶点中心对齐到局部 (0,0,0)，使得旋转轴心与控制柄中心位于几何体几何中心！
+  geo.center();
+  geo.computeBoundingBox();
+  const halfH = (geo.boundingBox.max.y - geo.boundingBox.min.y) / 2;
+
+  const flatShapes = ['pyramid', 'tetra', 'octa', 'dodeca', 'icosa', 'biconic'];
+  const mat = new THREE.MeshStandardMaterial({
+    color: def.color,
+    roughness: 0.3,
+    metalness: 0.1,
+    flatShading: flatShapes.includes(key)
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+
+  const edges = new THREE.EdgesGeometry(geo);
+  const wireframe = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 }));
+  mesh.add(wireframe);
+  if (key === 'sphere' || key === 'torus' || key === 'ellipsoid') wireframe.visible = false;
+  if (isWireframe) mat.wireframe = true;
+
+  // 地平面自然摆放：所有物体平稳放置在 X-Z 地平面上 (底面 y = 0，几何中心 y = halfH)
+  if (!position) {
+    if (objects.length === 0) {
+      position = { x: 0, y: halfH, z: 0 };
+    } else {
+      const n = objects.length;
+      const angle = (n - 1) * (Math.PI / 3);
+      const radius = 2.8 + Math.floor((n - 1) / 6) * 2.0;
+      position = {
+        x: Math.cos(angle) * radius,
+        y: halfH,
+        z: Math.sin(angle) * radius
+      };
+    }
+  }
+  mesh.position.set(position.x, position.y !== undefined ? position.y : halfH, position.z);
+  scene.add(mesh);
+
+  // 贴地接触软阴影
+  const shadowMat = new THREE.MeshBasicMaterial({
+    map: getContactShadowTexture(),
+    transparent: true,
+    opacity: 0.65,
+    depthWrite: false
+  });
+  const shadow = new THREE.Mesh(shadowPlaneGeo, shadowMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.set(mesh.position.x, 0.002, mesh.position.z);
+  scene.add(shadow);
+
+  const obj = {
+    id: nextObjId++,
+    key,
+    def,
+    mesh,
+    shadow,
+    edges: wireframe,
+    baseScale: { x: 1, y: 1, z: 1 }
+  };
+  objects.push(obj);
+
+  mesh.userData.objId = obj.id;
+  selectObject(obj);
+  if (isSnapping) applySnapToObject(obj, false);
+  renderObjList();
+  return obj;
+}
+
+function removeObject(obj) {
+  const idx = objects.indexOf(obj);
+  if (idx === -1) return;
+  scene.remove(obj.mesh);
+  if (obj.shadow) {
+    scene.remove(obj.shadow);
+    if (obj.shadow.material) obj.shadow.material.dispose();
+  }
+  if (obj.mesh.geometry) obj.mesh.geometry.dispose();
+  if (obj.mesh.material) obj.mesh.material.dispose();
+  if (obj.edges && obj.edges.geometry) obj.edges.geometry.dispose();
+  objects.splice(idx, 1);
+  if (selectedObj === obj) {
+    selectedObj = objects[0] || null;
+    if (selectedObj) selectObject(selectedObj);
+    else selectObject(null);
+  }
+  renderObjList();
+  updateInspectorState();
+}
+
+function clearAllObjects() {
+  while (objects.length) removeObject(objects[objects.length - 1]);
+}
+
+function selectObject(obj) {
+  selectedObj = obj;
+  ensureSelectionBox();
+  if (!obj) {
+    selectionBox.visible = false;
+    if (transformControls) transformControls.detach();
+    updatePosDisplay();
+    updateStageLabels();
+    renderObjList();
+    updateInspectorState();
+    return;
+  }
+  const box = new THREE.Box3().setFromObject(obj.mesh);
+  const size = new THREE.Vector3(); box.getSize(size);
+  const center = new THREE.Vector3(); box.getCenter(center);
+  selectionBox.geometry.dispose();
+  selectionBox.geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x * 1.08 + 0.15, size.y * 1.08 + 0.15, size.z * 1.08 + 0.15));
+  selectionBox.position.copy(center);
+  selectionBox.visible = (currentMode === '3d');
+
+  if (transformControls && gizmoVisible && currentMode === '3d') {
+    transformControls.attach(obj.mesh);
+  }
+  updateGizmoSize(obj);
+
+  syncDisplayedShape(obj.key);
+  syncSizeSliders(obj);
+  updatePreviews(obj.key);
+  updatePosDisplay();
+  renderObjList();
+  updateInspectorState();
+}
+
+function renderObjList() {
+  const list = document.getElementById('objList');
+  if (!list) return;
+  const count = document.getElementById('objCount');
+  if (count) count.textContent = `(${objects.length})`;
+  list.innerHTML = '';
+  if (objects.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'obj-empty-apple';
+    empty.textContent = '暂无物体';
+    list.appendChild(empty);
+    return;
+  }
+  objects.forEach(obj => {
+    const item = document.createElement('div');
+    item.className = 'obj-item-apple' + (selectedObj === obj ? ' selected' : '');
+    item.dataset.id = String(obj.id);
+
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.className = 'object-select';
+    select.dataset.id = String(obj.id);
+    const iconInfo = SHAPE_ICONS[obj.key] || SHAPE_ICONS.cube;
+    select.innerHTML = `<span class="obj-mini-badge ${iconInfo.theme}">${iconInfo.svg}</span><span>${obj.def.name} #${obj.id}</span>`;
+    select.title = `选择${obj.def.name} #${obj.id}`;
+    select.setAttribute('aria-label', `选择${obj.def.name} #${obj.id}`);
+    select.setAttribute('aria-pressed', String(selectedObj === obj));
+    select.addEventListener('click', () => {
+      selectObject(obj);
+      showToast(`已选 ${obj.def.name} #${obj.id} 🎯`);
+    });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'obj-del-apple';
+    remove.dataset.id = String(obj.id);
+    remove.textContent = '×';
+    remove.title = `删除${obj.def.name} #${obj.id}`;
+    remove.setAttribute('aria-label', `删除${obj.def.name} #${obj.id}`);
+    remove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeObject(obj);
+      showToast('已删除 🗑️');
+    });
+
+    item.append(select, remove);
+    list.appendChild(item);
+  });
+}
+
+function syncSizeSliders(obj) {
+  document.getElementById('sizeX').value = obj.baseScale.x;
+  document.getElementById('sizeY').value = obj.baseScale.y;
+  document.getElementById('sizeZ').value = obj.baseScale.z;
+  document.getElementById('sizeXVal').textContent = obj.baseScale.x.toFixed(1);
+  document.getElementById('sizeYVal').textContent = obj.baseScale.y.toFixed(1);
+  document.getElementById('sizeZVal').textContent = obj.baseScale.z.toFixed(1);
+}
+
+function applySize(obj, sx, sy, sz) {
+  const prevBox = new THREE.Box3().setFromObject(obj.mesh);
+  const prevMinY = prevBox.min.y;
+  obj.baseScale = { x: sx, y: sy, z: sz };
+  obj.mesh.scale.set(sx, sy, sz);
+  obj.mesh.updateMatrixWorld(true);
+  const newBox = new THREE.Box3().setFromObject(obj.mesh);
+  obj.mesh.position.y += (prevMinY - newBox.min.y);
+  obj.mesh.updateMatrixWorld(true);
+  if (selectedObj === obj) selectObject(obj);
+}
+
+function updatePosDisplay() {
+  const el = document.getElementById('posDisplay');
+  if (!el) return;
+  if (!selectedObj || currentMode !== '3d') {
+    el.textContent = '3D 自由空间';
+    return;
+  }
+  const p = selectedObj.mesh.position;
+  el.textContent = `(${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})`;
+}
+
+// ===== 磁性吸附与智能对齐系统 =====
+const SNAP_GRID = 0.5;
+const SNAP_ROTATION = THREE.MathUtils.degToRad(15);
+const SNAP_RADIUS = 0.35;
+
+function computeSnapCandidates(activeObj, objectsList = objects) {
+  const candidates = { x: [], y: [], z: [] };
+  activeObj.mesh.updateMatrixWorld(true);
+  const activeBox = new THREE.Box3().setFromObject(activeObj.mesh);
+  const activeCenter = activeBox.getCenter(new THREE.Vector3());
+  const activeHalf = activeBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+
+  const deltaCenter = activeObj.mesh.position.clone().sub(activeCenter);
+  const bottomOffset = activeObj.mesh.position.y - activeBox.min.y;
+  const topOffset = activeBox.max.y - activeObj.mesh.position.y;
+
+  candidates.y.push({ val: bottomOffset, label: '平贴地面 (Y=0)' });
+
+  for (const other of objectsList) {
+    if (other === activeObj || !other.mesh || !other.mesh.visible) continue;
+    other.mesh.updateMatrixWorld(true);
+    const obBox = new THREE.Box3().setFromObject(other.mesh);
+    const obCenter = obBox.getCenter(new THREE.Vector3());
+
+    // X 轴吸附候选（表面贴紧 + 侧面对齐 + 中心对齐）
+    candidates.x.push({ val: obBox.max.x + activeHalf.x + deltaCenter.x, label: `贴在 ${other.def.name} 右侧` });
+    candidates.x.push({ val: obBox.min.x - activeHalf.x + deltaCenter.x, label: `贴在 ${other.def.name} 左侧` });
+    candidates.x.push({ val: obBox.min.x + activeHalf.x + deltaCenter.x, label: `与 ${other.def.name} 左面对齐` });
+    candidates.x.push({ val: obBox.max.x - activeHalf.x + deltaCenter.x, label: `与 ${other.def.name} 右面对齐` });
+    candidates.x.push({ val: obCenter.x + deltaCenter.x, label: `与 ${other.def.name} X轴中心对齐` });
+
+    // Y 轴吸附候选（顶部堆叠 + 顶面对齐）
+    candidates.y.push({ val: obBox.max.y + bottomOffset, label: `堆叠在 ${other.def.name} 顶部` });
+    candidates.y.push({ val: obBox.max.y - topOffset, label: `与 ${other.def.name} 顶面对齐` });
+
+    // Z 轴吸附候选（前后表面贴紧 + 前面对齐 + 后面对齐 + 中心对齐）
+    candidates.z.push({ val: obBox.max.z + activeHalf.z + deltaCenter.z, label: `贴在 ${other.def.name} 前侧` });
+    candidates.z.push({ val: obBox.min.z - activeHalf.z + deltaCenter.z, label: `贴在 ${other.def.name} 后侧` });
+    candidates.z.push({ val: obBox.max.z - activeHalf.z + deltaCenter.z, label: `与 ${other.def.name} 前面对齐` });
+    candidates.z.push({ val: obBox.min.z + activeHalf.z + deltaCenter.z, label: `与 ${other.def.name} 后面对齐` });
+    candidates.z.push({ val: obCenter.z + deltaCenter.z, label: `与 ${other.def.name} Z轴中心对齐` });
+  }
+  return candidates;
+}
+
+function snapToCandidate(val, candidateList, radius = SNAP_RADIUS) {
+  let closest = null;
+  let minD = radius;
+  for (const c of candidateList) {
+    const d = Math.abs(val - c.val);
+    if (d < minD) {
+      minD = d;
+      closest = c;
+    }
+  }
+  if (closest) return { val: closest.val, snapped: true, label: closest.label };
+  return { val, snapped: false };
+}
+
+function liveMagneticSnap(obj) {
+  if (!isSnapping || !obj || !obj.mesh || currentMode !== '3d') return [];
+  const cands = computeSnapCandidates(obj, objects);
+  const snappedLabels = [];
+
+  const snapX = snapToCandidate(obj.mesh.position.x, cands.x, SNAP_RADIUS);
+  if (snapX.snapped) {
+    obj.mesh.position.x = snapX.val;
+    snappedLabels.push(snapX.label);
+  } else {
+    const gridX = Math.round(obj.mesh.position.x / SNAP_GRID) * SNAP_GRID;
+    if (cands.x.length === 0 || Math.abs(obj.mesh.position.x - gridX) < 0.15) {
+      obj.mesh.position.x = gridX;
+    }
+  }
+
+  const activeBox = new THREE.Box3().setFromObject(obj.mesh);
+  const bottomOffset = obj.mesh.position.y - activeBox.min.y;
+
+  const snapY = snapToCandidate(obj.mesh.position.y, cands.y, SNAP_RADIUS);
+  if (snapY.snapped) {
+    obj.mesh.position.y = snapY.val;
+    snappedLabels.push(snapY.label);
+  } else {
+    const gridY = Math.round((obj.mesh.position.y - bottomOffset) / SNAP_GRID) * SNAP_GRID + bottomOffset;
+    if (cands.y.length <= 1 || Math.abs(obj.mesh.position.y - gridY) < 0.15) {
+      obj.mesh.position.y = Math.max(bottomOffset, gridY);
+    }
+  }
+
+  const snapZ = snapToCandidate(obj.mesh.position.z, cands.z, SNAP_RADIUS);
+  if (snapZ.snapped) {
+    obj.mesh.position.z = snapZ.val;
+    snappedLabels.push(snapZ.label);
+  } else {
+    const gridZ = Math.round(obj.mesh.position.z / SNAP_GRID) * SNAP_GRID;
+    if (cands.z.length === 0 || Math.abs(obj.mesh.position.z - gridZ) < 0.15) {
+      obj.mesh.position.z = gridZ;
+    }
+  }
+
+  return snappedLabels;
+}
+
+function applySnapToObject(obj, showFeedback = true) {
+  if (!obj || !obj.mesh) return;
+  const snappedLabels = liveMagneticSnap(obj);
+
+  const euler = obj.mesh.rotation;
+  euler.x = Math.round(euler.x / SNAP_ROTATION) * SNAP_ROTATION;
+  euler.y = Math.round(euler.y / SNAP_ROTATION) * SNAP_ROTATION;
+  euler.z = Math.round(euler.z / SNAP_ROTATION) * SNAP_ROTATION;
+
+  obj.mesh.updateMatrixWorld(true);
+  updatePosDisplay();
+  if (selectionBox && selectionBox.visible) {
+    const updatedBox = new THREE.Box3().setFromObject(obj.mesh);
+    const center = new THREE.Vector3();
+    updatedBox.getCenter(center);
+    selectionBox.position.copy(center);
+  }
+
+  if (showFeedback && snappedLabels && snappedLabels.length > 0) {
+    showToast(`已吸附：${snappedLabels[0]} 🧲`);
+  }
+}
+
+function alignActiveObject(action) {
+  if (!selectedObj || currentMode !== '3d') return;
+  const obj = selectedObj;
+  obj.mesh.updateMatrixWorld(true);
+  const activeBox = new THREE.Box3().setFromObject(obj.mesh);
+  const activeCenter = activeBox.getCenter(new THREE.Vector3());
+
+  if (action === 'ground') {
+    obj.mesh.position.y -= activeBox.min.y;
+    obj.mesh.updateMatrixWorld(true);
+    updatePosDisplay();
+    if (selectionBox && selectionBox.visible) {
+      const updatedBox = new THREE.Box3().setFromObject(obj.mesh);
+      const center = new THREE.Vector3();
+      updatedBox.getCenter(center);
+      selectionBox.position.copy(center);
+    }
+    showToast('已平贴地面 (Y=0) 🏠');
+    return;
+  }
+
+  if (objects.length < 2) {
+    showToast('场景中至少需要两个物体才能对齐哦 💡');
+    return;
+  }
+
+  let nearest = null;
+  let minDistance = Infinity;
+  for (const other of objects) {
+    if (other === obj || !other.mesh || !other.mesh.visible) continue;
+    other.mesh.updateMatrixWorld(true);
+    const obBox = new THREE.Box3().setFromObject(other.mesh);
+    const d = activeCenter.distanceTo(obBox.getCenter(new THREE.Vector3()));
+    if (d < minDistance) {
+      minDistance = d;
+      nearest = other;
+    }
+  }
+  if (!nearest) return;
+
+  const obBox = new THREE.Box3().setFromObject(nearest.mesh);
+  const obCenter = obBox.getCenter(new THREE.Vector3());
+
+  if (action === 'front') {
+    obj.mesh.position.z += (obBox.max.z - activeBox.max.z);
+    showToast(`已与 ${nearest.def.name} 前表面平齐 📐`);
+  } else if (action === 'top') {
+    obj.mesh.position.y += (obBox.max.y - activeBox.max.y);
+    showToast(`已与 ${nearest.def.name} 顶面平齐 📏`);
+  } else if (action === 'abut') {
+    const options = [
+      {
+        desc: '左侧贴紧',
+        d: Math.abs(activeBox.max.x - obBox.min.x),
+        apply: () => {
+          obj.mesh.position.x += (obBox.min.x - activeBox.max.x);
+          if (Math.abs(activeBox.max.z - obBox.max.z) < 0.8) {
+            obj.mesh.position.z += (obBox.max.z - activeBox.max.z);
+          }
+        }
+      },
+      {
+        desc: '右侧贴紧',
+        d: Math.abs(activeBox.min.x - obBox.max.x),
+        apply: () => {
+          obj.mesh.position.x += (obBox.max.x - activeBox.min.x);
+          if (Math.abs(activeBox.max.z - obBox.max.z) < 0.8) {
+            obj.mesh.position.z += (obBox.max.z - activeBox.max.z);
+          }
+        }
+      },
+      {
+        desc: '后侧贴紧',
+        d: Math.abs(activeBox.max.z - obBox.min.z),
+        apply: () => {
+          obj.mesh.position.z += (obBox.min.z - activeBox.max.z);
+          if (Math.abs(activeBox.max.x - obBox.max.x) < 0.8) {
+            obj.mesh.position.x += (obBox.max.x - activeBox.max.x);
+          }
+        }
+      },
+      {
+        desc: '前侧贴紧',
+        d: Math.abs(activeBox.min.z - obBox.max.z),
+        apply: () => {
+          obj.mesh.position.z += (obBox.max.z - activeBox.min.z);
+          if (Math.abs(activeBox.max.x - obBox.max.x) < 0.8) {
+            obj.mesh.position.x += (obBox.max.x - activeBox.max.x);
+          }
+        }
+      },
+      {
+        desc: '顶部堆叠',
+        d: Math.abs(activeBox.min.y - obBox.max.y),
+        apply: () => {
+          obj.mesh.position.y += (obBox.max.y - activeBox.min.y);
+          obj.mesh.position.x += (obCenter.x - activeCenter.x);
+          obj.mesh.position.z += (obCenter.z - activeCenter.z);
+        }
+      }
+    ];
+    options.sort((a, b) => a.d - b.d);
+    const best = options[0];
+    best.apply();
+    showToast(`已与 ${nearest.def.name} ${best.desc} 🧲`);
+  }
+
+  obj.mesh.updateMatrixWorld(true);
+  updatePosDisplay();
+  if (selectionBox && selectionBox.visible) {
+    const updatedBox = new THREE.Box3().setFromObject(obj.mesh);
+    const center = new THREE.Vector3();
+    updatedBox.getCenter(center);
+    selectionBox.position.copy(center);
+  }
+}
+
+function setSnapping(enabled, userInitiated = true) {
+  isSnapping = Boolean(enabled);
+  const snapBtn = document.getElementById('snapBtn');
+  const inspectorSnapBtn = document.getElementById('inspectorSnapBtn');
+
+  if (snapBtn) {
+    snapBtn.classList.toggle('active', isSnapping);
+    setPressed(snapBtn, isSnapping);
+  }
+  if (inspectorSnapBtn) {
+    inspectorSnapBtn.classList.toggle('active', isSnapping);
+    setPressed(inspectorSnapBtn, isSnapping);
+  }
+
+  if (transformControls) {
+    transformControls.setTranslationSnap(null);
+    transformControls.setRotationSnap(isSnapping ? SNAP_ROTATION : null);
+  }
+
+  if (isSnapping && selectedObj && currentMode === '3d') {
+    applySnapToObject(selectedObj, false);
+  }
+
+  if (userInitiated) {
+    showToast(isSnapping ? '磁吸对齐已开启 🧲 (支持面贴合、平齐与15°旋转)' : '磁吸对齐已关闭 ✋');
+  }
+}
+
+function updateIslandInfo(def, key = currentShapeKey) {
+  const iconInfo = SHAPE_ICONS[key] || SHAPE_ICONS.cube;
+  const iconEl = document.getElementById('islandShapeIcon');
+  if (iconEl && iconInfo) {
+    iconEl.className = `island-icon-badge ${iconInfo.theme}`;
+    iconEl.innerHTML = iconInfo.svg;
+  }
+  const emojiEl = document.getElementById('islandEmoji');
+  if (emojiEl) emojiEl.textContent = def.emoji;
+  document.getElementById('islandName').textContent = def.name;
+  document.getElementById('factFaces').textContent = def.faces;
+  document.getElementById('factVertices').textContent = def.vertices;
+  document.getElementById('factEdges').textContent = def.edges;
+  document.getElementById('factExample').textContent = def.example;
+}
+
+// ===== 表面展开图与折叠引擎 (小学空间思维核心) =====
+function createFaceTexture(label, bgColor, subLabel = '', isMirrored = false) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, 512, 512);
+
+  ctx.strokeStyle = '#1D1D1F';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(10, 10, 492, 492);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(24, 24, 464, 464);
+
+  if (label && NetFoldingManager.showLabels) {
+    ctx.save();
+    if (isMirrored) {
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = 'bold 56px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 8;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(label, 256, subLabel ? 220 : 256);
+    ctx.fillStyle = '#1D1D1F';
+    ctx.fillText(label, 256, subLabel ? 220 : 256);
+
+    if (subLabel) {
+      ctx.font = 'bold 32px -apple-system, sans-serif';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(subLabel, 256, 305);
+      ctx.fillStyle = '#3A3A3C';
+      ctx.fillText(subLabel, 256, 305);
+    }
+    ctx.restore();
+  }
+
+  const texture = new THREE.CanvasTexture(cv);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createTriTexture(label, bgColor, subLabel = '', isMirrored = false) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = bgColor;
+  ctx.beginPath();
+  ctx.moveTo(25, 480);
+  ctx.lineTo(487, 480);
+  ctx.lineTo(256, 25);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = '#1D1D1F';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  if (label && NetFoldingManager.showLabels) {
+    ctx.save();
+    if (isMirrored) {
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = 'bold 52px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 8;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(label, 256, subLabel ? 340 : 360);
+    ctx.fillStyle = '#1D1D1F';
+    ctx.fillText(label, 256, subLabel ? 340 : 360);
+
+    if (subLabel) {
+      ctx.font = 'bold 30px -apple-system, sans-serif';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(subLabel, 256, 405);
+      ctx.fillStyle = '#3A3A3C';
+      ctx.fillText(subLabel, 256, 405);
+    }
+    ctx.restore();
+  }
+
+  const texture = new THREE.CanvasTexture(cv);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createCircleTexture(label, bgColor, subLabel = '', isMirrored = false) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = bgColor;
+  ctx.beginPath();
+  ctx.arc(256, 256, 240, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#1D1D1F';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  if (label && NetFoldingManager.showLabels) {
+    ctx.save();
+    if (isMirrored) {
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = 'bold 54px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 8;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(label, 256, subLabel ? 220 : 256);
+    ctx.fillStyle = '#1D1D1F';
+    ctx.fillText(label, 256, subLabel ? 220 : 256);
+
+    if (subLabel) {
+      ctx.font = 'bold 32px -apple-system, sans-serif';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(subLabel, 256, 305);
+      ctx.fillStyle = '#3A3A3C';
+      ctx.fillText(subLabel, 256, 305);
+    }
+    ctx.restore();
+  }
+
+  const texture = new THREE.CanvasTexture(cv);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+// 矩形面 (带双面防镜像字和黑边轮廓)
+function createFaceMesh(w, h, label, color, subLabel = '') {
+  const g = new THREE.Group();
+  const geoF = new THREE.PlaneGeometry(w, h);
+  geoF.rotateX(-Math.PI / 2); // 平放在 X-Z 地面
+
+  const texF = createFaceTexture(label, color, subLabel, false);
+  const matF = new THREE.MeshStandardMaterial({
+    map: texF,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+  g.add(new THREE.Mesh(geoF, matF));
+
+  // 背面（防镜像：翻转 UV 并朝下）
+  const geoB = new THREE.PlaneGeometry(w, h);
+  geoB.rotateX(Math.PI / 2);
+  const uvsB = geoB.attributes.uv.array;
+  for (let i = 0; i < uvsB.length; i += 2) {
+    uvsB[i] = 1 - uvsB[i];
+  }
+  geoB.attributes.uv.needsUpdate = true;
+  const texB = createFaceTexture(label, color, subLabel, true);
+  const matB = new THREE.MeshStandardMaterial({
+    map: texB,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+  g.add(new THREE.Mesh(geoB, matB));
+
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geoF),
+    new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 })
+  );
+  g.add(edges);
+
+  return { mesh: g, matF, matB, texF, texB };
+}
+
+// 三角形面 (等边/等腰三角形，底边沿 X 轴 [-base/2, base/2]，顶点在 +Z 轴 height，带双面防镜像与轮廓线)
+function createTriMesh(base, height, label, color, subLabel = '') {
+  const g = new THREE.Group();
+  
+  // 正面 (+Y 法线)
+  const verticesF = new Float32Array([
+    -base / 2, 0, 0,
+     base / 2, 0, 0,
+     0, 0, height
+  ]);
+  const uvsF = new Float32Array([
+    0.05, 0.05,
+    0.95, 0.05,
+    0.5, 0.95
+  ]);
+  const geoF = new THREE.BufferGeometry();
+  geoF.setAttribute('position', new THREE.BufferAttribute(verticesF, 3));
+  geoF.setAttribute('uv', new THREE.BufferAttribute(uvsF, 2));
+  geoF.setIndex([0, 2, 1]);
+  geoF.computeVertexNormals();
+
+  const texF = createTriTexture(label, color, subLabel, false);
+  const matF = new THREE.MeshStandardMaterial({
+    map: texF,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+  g.add(new THREE.Mesh(geoF, matF));
+
+  // 背面 (-Y 法线，带防镜像)
+  const geoB = new THREE.BufferGeometry();
+  geoB.setAttribute('position', new THREE.BufferAttribute(verticesF, 3));
+  const uvsB = new Float32Array([
+    0.95, 0.05,
+    0.05, 0.05,
+    0.5, 0.95
+  ]);
+  geoB.setAttribute('uv', new THREE.BufferAttribute(uvsB, 2));
+  geoB.setIndex([0, 1, 2]);
+  geoB.computeVertexNormals();
+
+  const texB = createTriTexture(label, color, subLabel, true);
+  const matB = new THREE.MeshStandardMaterial({
+    map: texB,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+  g.add(new THREE.Mesh(geoB, matB));
+
+  const lineGeo = new THREE.BufferGeometry();
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    -base / 2, 0.001, 0,
+     base / 2, 0.001, 0,
+     base / 2, 0.001, 0,
+     0, 0.001, height,
+     0, 0.001, height,
+    -base / 2, 0.001, 0
+  ]), 3));
+  g.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 })));
+
+  return { mesh: g, matF, matB, texF, texB };
+}
+
+function createRegularPolygonTexture(points, label, bgColor, subLabel = '', isMirrored = false) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const ctx = cv.getContext('2d');
+  const drawPath = () => {
+    ctx.beginPath();
+    points.forEach(([u, v], i) => {
+      const x = u * 512, y = v * 512;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+  };
+
+  drawPath();
+  ctx.fillStyle = bgColor;
+  ctx.fill();
+  ctx.strokeStyle = '#1D1D1F';
+  ctx.lineWidth = 14;
+  drawPath();
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 6;
+  drawPath();
+  ctx.stroke();
+
+  if (label && NetFoldingManager.showLabels) {
+    ctx.save();
+    if (isMirrored) {
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = 'bold 48px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 8;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(label, 256, subLabel ? 225 : 256);
+    ctx.fillStyle = '#1D1D1F';
+    ctx.fillText(label, 256, subLabel ? 225 : 256);
+    if (subLabel) {
+      ctx.font = 'bold 30px -apple-system, sans-serif';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(subLabel, 256, 306);
+      ctx.fillStyle = '#3A3A3C';
+      ctx.fillText(subLabel, 256, 306);
+    }
+    ctx.restore();
+  }
+
+  const texture = new THREE.CanvasTexture(cv);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createRegularPolygonMesh(side, sides, label, color, subLabel = '') {
+  const g = new THREE.Group();
+  const apothem = side / (2 * Math.tan(Math.PI / sides));
+  const circumradius = side / (2 * Math.sin(Math.PI / sides));
+  const perimeter = [];
+  for (let i = 0; i < sides; i++) {
+    const angle = -Math.PI / 2 + Math.PI / sides + i * (Math.PI * 2 / sides);
+    perimeter.push([circumradius * Math.cos(angle), apothem + circumradius * Math.sin(angle)]);
+  }
+  const uvPoints = perimeter.map(([x, z]) => [0.5 + x / (2 * circumradius), 1 - z / (2 * apothem)]);
+  // 几何中心放在局部原点，便于把正多边形作为环绕展开图的中心底面。
+  const positions = [[0, 0, 0], ...perimeter.map(([x, z]) => [x, 0, z - apothem])];
+  const uvs = [[0.5, 0.5], ...uvPoints];
+  const frontIndices = [];
+  for (let i = 0; i < sides; i++) {
+    const next = (i + 1) % sides;
+    frontIndices.push(0, next + 1, i + 1);
+  }
+
+  const geoF = new THREE.BufferGeometry();
+  geoF.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
+  geoF.setAttribute('uv', new THREE.Float32BufferAttribute(uvs.flat(), 2));
+  geoF.setIndex(frontIndices);
+  geoF.computeVertexNormals();
+  const texF = createRegularPolygonTexture(uvPoints, label, color, subLabel, false);
+  const matF = new THREE.MeshStandardMaterial({ map: texF, roughness: 0.35, metalness: 0.05, side: THREE.FrontSide });
+  g.add(new THREE.Mesh(geoF, matF));
+
+  const backIndices = [];
+  for (let i = 0; i < frontIndices.length; i += 3) backIndices.push(frontIndices[i], frontIndices[i + 2], frontIndices[i + 1]);
+  const backUvs = [[0.5, 0.5], ...uvPoints.map(([u, v]) => [1 - u, v])];
+  const geoB = new THREE.BufferGeometry();
+  geoB.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
+  geoB.setAttribute('uv', new THREE.Float32BufferAttribute(backUvs.flat(), 2));
+  geoB.setIndex(backIndices);
+  geoB.computeVertexNormals();
+  const texB = createRegularPolygonTexture(uvPoints, label, color, subLabel, true);
+  const matB = new THREE.MeshStandardMaterial({ map: texB, roughness: 0.35, metalness: 0.05, side: THREE.FrontSide });
+  g.add(new THREE.Mesh(geoB, matB));
+
+  const linePositions = [];
+  for (let i = 0; i < sides; i++) {
+    const a = perimeter[i], b = perimeter[(i + 1) % sides];
+    linePositions.push(a[0], 0.001, a[1] - apothem, b[0], 0.001, b[1] - apothem);
+  }
+  const lineGeo = new THREE.BufferGeometry();
+  lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+  g.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 })));
+  return { mesh: g, matF, matB, texF, texB, apothem, circumradius };
+}
+
+// 圆形面 (底面/顶面圆)
+function createCircleMesh(radius, label, color, subLabel = '') {
+  const g = new THREE.Group();
+  const texF = createCircleTexture(label, color, subLabel, false);
+  const matF = new THREE.MeshStandardMaterial({
+    map: texF,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+
+  const geoF = new THREE.CircleGeometry(radius, 48);
+  geoF.rotateX(-Math.PI / 2);
+  g.add(new THREE.Mesh(geoF, matF));
+
+  // 反面单独绘制，保持从上下两侧观察时标签都能正常阅读。
+  const texB = createCircleTexture(label, color, subLabel, true);
+  const matB = new THREE.MeshStandardMaterial({
+    map: texB,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide
+  });
+  const geoB = new THREE.CircleGeometry(radius, 48);
+  geoB.rotateX(Math.PI / 2);
+  g.add(new THREE.Mesh(geoB, matB));
+
+  const pts = [];
+  for (let i = 0; i <= 64; i++) {
+    const a = (i / 64) * Math.PI * 2;
+    pts.push(radius * Math.cos(a), 0.002, radius * Math.sin(a));
+  }
+  const ringGeo = new THREE.BufferGeometry();
+  ringGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+  g.add(new THREE.Line(ringGeo, new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 })));
+
+  return { mesh: g, matF, matB, texF, texB };
+}
+
+const NetFoldingManager = {
+  group: new THREE.Group(),
+  currentKey: 'cube',
+  currentModel: null,
+  foldProgress: 1.0,
+  isPlaying: false,
+  playDirection: -1,
+  showLabels: true,
+  supportedShapes: ['cube', 'box', 'cylinder', 'cone', 'pyramid', 'prism', 'hexPrism', 'tetra'],
+
+  init(mainScene) {
+    mainScene.add(this.group);
+    this.group.visible = false;
+  },
+
+  isSupported(key) {
+    return this.supportedShapes.includes(key);
+  },
+
+  setVisible(visible) {
+    this.group.visible = visible;
+  },
+
+  loadShape(key) {
+    if (!this.isSupported(key)) {
+      showToast(`💡 ${SHAPES[key]?.name || '该形状'} 暂无多边形展开图，已为您切换到正方体 📦`);
+      key = 'cube';
+    }
+    this.currentKey = key;
+    syncDisplayedShape(key);
+    this.clear();
+
+    if (key === 'cube') this.currentModel = this.buildCubeNet();
+    else if (key === 'box') this.currentModel = this.buildBoxNet();
+    else if (key === 'cylinder') this.currentModel = this.buildCylinderNet();
+    else if (key === 'cone') this.currentModel = this.buildConeNet();
+    else if (key === 'pyramid') this.currentModel = this.buildPyramidNet();
+    else if (key === 'prism') this.currentModel = this.buildPrismNet();
+    else if (key === 'hexPrism') this.currentModel = this.buildHexPrismNet();
+    else if (key === 'tetra') this.currentModel = this.buildTetraNet();
+
+    this.applyFold(this.foldProgress);
+    this.updateTips();
+    return key;
+  },
+
+  clear() {
+    while (this.group.children.length > 0) {
+      const c = this.group.children[0];
+      this.group.remove(c);
+      c.traverse(node => {
+        if (node.geometry) node.geometry.dispose();
+        if (node.material) {
+          if (Array.isArray(node.material)) node.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+          else { if (node.material.map) node.material.map.dispose(); node.material.dispose(); }
+        }
+      });
+    }
+    this.currentModel = null;
+  },
+
+  applyFold(t) {
+    this.foldProgress = Math.max(0, Math.min(1, t));
+    document.getElementById('foldSlider').value = this.foldProgress;
+    const pct = Math.round(this.foldProgress * 100);
+    document.getElementById('foldVal').textContent =
+      this.foldProgress === 0 ? '0% (完全摊平)' :
+      this.foldProgress === 1 ? '100% (3D实体)' : `${pct}% (折叠中)`;
+
+    if (this.currentModel && this.currentModel.update) {
+      this.currentModel.update(this.foldProgress);
+    }
+    if (currentMode === 'net') { fitNetView(); renderAllPreviewsForNet(); }
+  },
+
+  togglePlay() {
+    this.isPlaying = !this.isPlaying;
+    updateFoldPlayButton();
+    if (this.isPlaying) {
+      showToast('正在播放折叠动效 📐');
+    } else {
+      showToast('已暂停折纸动画 ✋');
+    }
+  },
+
+  stopPlay() {
+    if (this.isPlaying) {
+      this.isPlaying = false;
+      updateFoldPlayButton();
+    }
+  },
+
+  updateFrame() {
+    if (!this.isPlaying || currentMode !== 'net') return;
+    const step = 0.007;
+    let nextVal = this.foldProgress + this.playDirection * step;
+    if (nextVal <= 0) { nextVal = 0; this.playDirection = 1; }
+    else if (nextVal >= 1) { nextVal = 1; this.playDirection = -1; }
+    this.applyFold(nextVal);
+  },
+
+  updateTips() {
+    const tips = {
+      cube: '💡 <b>正方体 1-4-1 展开图：</b>中间 4 个正方形相连，上下各 1 个正方形，折起来正好合拢无缝！',
+      box: '💡 <b>长方体展开图：</b>相对的面（上与底、前与后、左与右）面积与形状完全相同！',
+      cylinder: '💡 <b>圆柱展开图：</b>侧面展开是一个长方形，长等于底面圆周长 2πr，宽等于高 h！',
+      cone: '💡 <b>圆锥展开图：</b>一个圆 + 一个扇形。扇形半径是圆锥的母线长 l，弧长等于底圆周长 2πr；卷合时纸面大小不变！',
+      pyramid: '💡 <b>四棱锥展开图：</b>中心是正方形底面，四周 4 个三角形侧面像花瓣一样闭合成立体！',
+      prism: '💡 <b>三棱柱展开图：</b>中心是三角形底面，3 个长方形侧面沿三条边向外打开，另一个三角形底面接在侧面外缘！',
+      hexPrism: '💡 <b>六棱柱展开图：</b>中心是正六边形底面，6 个长方形侧面围着底面打开，另一个正六边形底面接在侧面外缘！',
+      tetra: '💡 <b>四面体展开图：</b>由 4 个完全相同的等边三角形组成，是最稳固的多面体！'
+    };
+    document.getElementById('netTips').innerHTML = tips[this.currentKey] || '💡 拖动滑块查看 3D 几何体的折纸奥秘！';
+  },
+
+  // 1. 正方体 1-4-1 展开图
+  buildCubeNet(s = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const bottom = createFaceMesh(s, s, '底面', '#FF3B30');
+    bottom.mesh.position.set(0, 0, 0); g.add(bottom.mesh);
+
+    const pivotF = new THREE.Group(); pivotF.position.set(0, 0, s / 2);
+    const front = createFaceMesh(s, s, '前面', '#FF9500');
+    front.mesh.position.set(0, 0, s / 2); pivotF.add(front.mesh); g.add(pivotF);
+
+    const pivotB = new THREE.Group(); pivotB.position.set(0, 0, -s / 2);
+    const back = createFaceMesh(s, s, '后面', '#FFCC00');
+    back.mesh.position.set(0, 0, -s / 2); pivotB.add(back.mesh); g.add(pivotB);
+
+    const pivotL = new THREE.Group(); pivotL.position.set(-s / 2, 0, 0);
+    const left = createFaceMesh(s, s, '左面', '#34C759');
+    left.mesh.position.set(-s / 2, 0, 0); pivotL.add(left.mesh); g.add(pivotL);
+
+    const pivotR = new THREE.Group(); pivotR.position.set(s / 2, 0, 0);
+    const right = createFaceMesh(s, s, '右面', '#00C7BE');
+    right.mesh.position.set(s / 2, 0, 0); pivotR.add(right.mesh); g.add(pivotR);
+
+    const pivotTop = new THREE.Group(); pivotTop.position.set(s, 0, 0);
+    const top = createFaceMesh(s, s, '上面', '#007AFF');
+    top.mesh.position.set(s / 2, 0, 0); pivotTop.add(top.mesh); pivotR.add(pivotTop);
+
+    return {
+      update(t) {
+        const th = t * (Math.PI / 2);
+        pivotF.rotation.x = -th;
+        pivotB.rotation.x = th;
+        pivotL.rotation.z = -th;
+        pivotR.rotation.z = th;
+        pivotTop.rotation.z = th;
+      }
+    };
+  },
+
+  // 2. 长方体展开图 (各面色彩不同，底红-前橙-后黄-左绿-右青-上蓝)
+  buildBoxNet(L = 2.0, W = 1.4, H = 1.0) {
+    const g = new THREE.Group(); this.group.add(g);
+    const bottom = createFaceMesh(L, W, '底面', '#FF3B30', '长 × 宽');
+    bottom.mesh.position.set(0, 0, 0); g.add(bottom.mesh);
+
+    const pivotF = new THREE.Group(); pivotF.position.set(0, 0, W / 2);
+    const front = createFaceMesh(L, H, '前面', '#FF9500', '长 × 高');
+    front.mesh.position.set(0, 0, H / 2); pivotF.add(front.mesh); g.add(pivotF);
+
+    const pivotB = new THREE.Group(); pivotB.position.set(0, 0, -W / 2);
+    const back = createFaceMesh(L, H, '后面', '#FFCC00', '长 × 高');
+    back.mesh.position.set(0, 0, -H / 2); pivotB.add(back.mesh); g.add(pivotB);
+
+    const pivotL = new THREE.Group(); pivotL.position.set(-L / 2, 0, 0);
+    const left = createFaceMesh(H, W, '左面', '#34C759', '高 × 宽');
+    left.mesh.position.set(-H / 2, 0, 0); pivotL.add(left.mesh); g.add(pivotL);
+
+    const pivotR = new THREE.Group(); pivotR.position.set(L / 2, 0, 0);
+    const right = createFaceMesh(H, W, '右面', '#00C7BE', '高 × 宽');
+    right.mesh.position.set(H / 2, 0, 0); pivotR.add(right.mesh); g.add(pivotR);
+
+    const pivotTop = new THREE.Group(); pivotTop.position.set(0, 0, H);
+    const top = createFaceMesh(L, W, '上面', '#007AFF', '长 × 宽');
+    top.mesh.position.set(0, 0, W / 2); pivotTop.add(top.mesh); pivotF.add(pivotTop);
+
+    return {
+      update(t) {
+        const th = t * (Math.PI / 2);
+        pivotF.rotation.x = -th;
+        pivotB.rotation.x = th;
+        pivotL.rotation.z = -th;
+        pivotR.rotation.z = th;
+        pivotTop.rotation.x = -th;
+      }
+    };
+  },
+
+  // 3. 圆柱展开图：先在垂直于母线的平面内卷曲，再整体立起，保持长方形无剪切。
+  buildCylinderNet(R = 0.8, H = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const C = 2 * Math.PI * R;
+    const segsU = 64;
+    const segsV = 16;
+
+    const sideGeo = new THREE.PlaneGeometry(C, H, segsU, segsV);
+    const sideTex = createFaceTexture('侧面长方形', '#34C759', '长 = 2πr, 宽 = 高 h');
+    const sideMat = new THREE.MeshStandardMaterial({
+      map: sideTex,
+      roughness: 0.35,
+      metalness: 0.05,
+      side: THREE.DoubleSide
+    });
+    const sideMesh = new THREE.Mesh(sideGeo, sideMat);
+    g.add(sideMesh);
+    const sideBackGeo = sideGeo.clone();
+    const sideBackIndices = Array.from(sideGeo.index.array);
+    for (let i = 0; i < sideBackIndices.length; i += 3) {
+      [sideBackIndices[i + 1], sideBackIndices[i + 2]] = [sideBackIndices[i + 2], sideBackIndices[i + 1]];
+    }
+    sideBackGeo.setIndex(sideBackIndices);
+    const sideBackTex = createFaceTexture('侧面长方形', '#34C759', '长 = 2πr, 宽 = 高 h', true);
+    const sideBackMat = new THREE.MeshStandardMaterial({
+      map: sideBackTex,
+      roughness: 0.35,
+      metalness: 0.05,
+      side: THREE.FrontSide
+    });
+    g.add(new THREE.Mesh(sideBackGeo, sideBackMat));
+
+    // 底面圆固定；侧面在 (0, 0, R) 与底圆保持相切。
+    const botCap = createCircleMesh(R, '底面圆', '#FF3B30', '圆半径 r');
+    botCap.mesh.position.set(0, 0, 0);
+    g.add(botCap.mesh);
+
+    // 顶面圆：展开时平贴在长方形外侧，折叠时随侧面上沿立起并水平扣合于 (0, H, 0)
+    const topCap = createCircleMesh(R, '顶面圆', '#007AFF', '圆半径 r');
+    g.add(topCap.mesh);
+
+    return {
+      update(t) {
+        const pos = sideGeo.attributes.position;
+        const arr = pos.array;
+
+        // 侧面长方形网格顶点计算：围绕固定的底面圆 (0, 0, 0) 卷曲并立起
+        for (let i = 0; i < pos.count; i++) {
+          const col = i % (segsU + 1);
+          const row = Math.floor(i / (segsU + 1));
+          const origX = (col / segsU) * C - C / 2;
+          const origY = H / 2 - (row / segsV) * H;
+          const u = origX / R; // [-pi, pi]
+          const v = (origY + H / 2) / H; // 0 是底边，1 是顶边
+
+          let x, y, z;
+          if (t === 0) {
+            x = origX;
+            y = 0;
+            z = R + v * H;
+          } else {
+            const rC = R / t;
+            const angle = u * t;
+            const bend = 2 * rC * Math.sin(angle / 2) ** 2;
+            const tilt = t * Math.PI / 2;
+            x = rC * Math.sin(angle);
+            y = bend * Math.cos(tilt) + v * H * Math.sin(tilt);
+            z = R - bend * Math.sin(tilt) + v * H * Math.cos(tilt);
+          }
+
+          arr[i * 3] = x;
+          arr[i * 3 + 1] = y;
+          arr[i * 3 + 2] = z;
+        }
+        pos.needsUpdate = true;
+        sideBackGeo.attributes.position.array.set(arr);
+        sideBackGeo.attributes.position.needsUpdate = true;
+        sideGeo.computeVertexNormals();
+        sideGeo.computeBoundingBox();
+        sideGeo.computeBoundingSphere();
+        sideBackGeo.computeVertexNormals();
+        sideBackGeo.computeBoundingBox();
+        sideBackGeo.computeBoundingSphere();
+
+        // 底面圆保持在原位。
+        botCap.mesh.position.set(0, 0, 0);
+
+        // 顶面圆：铰接于侧面上沿 (u=0, v=1)，随折叠旋转 180° 盖在顶部 (0, H, 0)
+        const yHinge = H * Math.sin(t * Math.PI / 2);
+        const zHinge = R + H * Math.cos(t * Math.PI / 2);
+        const yCenter = yHinge + R * Math.sin(t * Math.PI);
+        const zCenter = zHinge + R * Math.cos(t * Math.PI);
+
+        topCap.mesh.position.set(0, yCenter, zCenter);
+        topCap.mesh.rotation.x = -t * Math.PI;
+      }
+    };
+  },
+
+  // 4. 圆锥展开图：母线长 L 与弧长 2πR 不变，在底圆切点处卷合。
+  buildConeNet(R = 0.8, H = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const L = Math.sqrt(H * H + R * R);
+    const alpha = (2 * Math.PI * R) / L;
+    const segsU = 48;
+    const segsR = 12;
+
+    const positions = new Float32Array((segsR + 1) * (segsU + 1) * 3);
+    const uvs = new Float32Array((segsR + 1) * (segsU + 1) * 2);
+    const indices = [];
+
+    for (let r = 0; r <= segsR; r++) {
+      for (let u = 0; u <= segsU; u++) {
+        const idx = (r * (segsU + 1) + u) * 3;
+        const uvIdx = (r * (segsU + 1) + u) * 2;
+        uvs[uvIdx] = u / segsU;
+        uvs[uvIdx + 1] = r / segsR;
+
+        if (r < segsR && u < segsU) {
+          const a = r * (segsU + 1) + u;
+          const b = a + 1;
+          const c = (r + 1) * (segsU + 1) + u;
+          const d = c + 1;
+          indices.push(a, c, b);
+          indices.push(b, c, d);
+        }
+      }
+    }
+
+    const sectorGeo = new THREE.BufferGeometry();
+    sectorGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    sectorGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    sectorGeo.setIndex(indices);
+
+    const sectorTex = createFaceTexture('侧面展开 (扇形)', '#FF9500', '弧长 = 底面周长 2πr');
+    const sectorMat = new THREE.MeshStandardMaterial({
+      map: sectorTex,
+      roughness: 0.35,
+      metalness: 0.05,
+      side: THREE.DoubleSide
+    });
+    const sectorMesh = new THREE.Mesh(sectorGeo, sectorMat);
+    g.add(sectorMesh);
+    const sectorBackGeo = sectorGeo.clone();
+    const sectorBackIndices = Array.from(indices);
+    for (let i = 0; i < sectorBackIndices.length; i += 3) {
+      [sectorBackIndices[i + 1], sectorBackIndices[i + 2]] = [sectorBackIndices[i + 2], sectorBackIndices[i + 1]];
+    }
+    sectorBackGeo.setIndex(sectorBackIndices);
+    const sectorBackTex = createFaceTexture('侧面展开 (扇形)', '#FF9500', '弧长 = 底面周长 2πr', true);
+    const sectorBackMat = new THREE.MeshStandardMaterial({
+      map: sectorBackTex,
+      roughness: 0.35,
+      metalness: 0.05,
+      side: THREE.FrontSide
+    });
+    g.add(new THREE.Mesh(sectorBackGeo, sectorBackMat));
+
+    const botCap = createCircleMesh(R, '底面圆', '#007AFF', '圆形底面');
+    g.add(botCap.mesh);
+
+    return {
+      update(t) {
+        const pos = sectorGeo.attributes.position;
+        const arr = pos.array;
+
+        // beta 是卷曲锥面的倾角；r * wrap = L * alpha = 2πR。
+        const beta = t * Math.acos(R / L);
+        const radius = L * Math.cos(beta);
+        const height = L * Math.sin(beta);
+        const wrap = alpha / Math.cos(beta);
+        const tilt = t * Math.PI;
+        const sinTilt = Math.sin(tilt), cosTilt = Math.cos(tilt);
+
+        for (let r = 0; r <= segsR; r++) {
+          const rho = r / segsR;
+          for (let u = 0; u <= segsU; u++) {
+            const theta = (u / segsU - 0.5) * wrap;
+            const localY = -(1 - rho) * height;
+            const localZ = -radius + rho * radius * Math.cos(theta);
+            const idx = (r * (segsU + 1) + u) * 3;
+            arr[idx] = rho * radius * Math.sin(theta);
+            arr[idx + 1] = localY * cosTilt - localZ * sinTilt;
+            arr[idx + 2] = -R + localY * sinTilt + localZ * cosTilt;
+          }
+        }
+        pos.needsUpdate = true;
+        sectorBackGeo.attributes.position.array.set(arr);
+        sectorBackGeo.attributes.position.needsUpdate = true;
+        sectorGeo.computeVertexNormals();
+        sectorGeo.computeBoundingBox();
+        sectorGeo.computeBoundingSphere();
+        sectorBackGeo.computeVertexNormals();
+        sectorBackGeo.computeBoundingBox();
+        sectorBackGeo.computeBoundingSphere();
+
+        botCap.mesh.position.set(0, 0, 0);
+      }
+    };
+  },
+
+  // 5. 四棱锥展开图 (四面花瓣完全对称展开，严格向心合拢于 (0, H, 0))
+  buildPyramidNet(s = 1.6, H = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const slantH = Math.sqrt(H * H + (s / 2) * (s / 2));
+    const gamma = Math.PI - Math.atan2(H, s / 2);
+
+    const bottom = createFaceMesh(s, s, '底面', '#FF3B30', '正方形底面');
+    bottom.mesh.position.set(0, 0, 0); g.add(bottom.mesh);
+
+    const petals = [];
+    const configs = [
+      { label: '前面', pos: [0, 0, s / 2], ry: 0, color: '#FF9500' },
+      { label: '后面', pos: [0, 0, -s / 2], ry: Math.PI, color: '#34C759' },
+      { label: '左面', pos: [-s / 2, 0, 0], ry: -Math.PI / 2, color: '#00C7BE' },
+      { label: '右面', pos: [s / 2, 0, 0], ry: Math.PI / 2, color: '#FFCC00' }
+    ];
+
+    configs.forEach(cfg => {
+      const hingeGroup = new THREE.Group();
+      hingeGroup.position.set(...cfg.pos);
+      hingeGroup.rotation.y = cfg.ry;
+      g.add(hingeGroup);
+
+      const foldGroup = new THREE.Group();
+      hingeGroup.add(foldGroup);
+
+      const tri = createTriMesh(s, slantH, cfg.label, cfg.color, '三角形侧面');
+      foldGroup.add(tri.mesh);
+      petals.push(foldGroup);
+    });
+
+    return {
+      update(t) {
+        const phi = -t * gamma;
+        petals.forEach(p => { p.rotation.x = phi; });
+      }
+    };
+  },
+
+  // 6. 三棱柱展开图：中心底面固定，3 个侧面沿三条边向外展开，另一底面接在侧面外缘。
+  buildPrismNet(s = 1.4, H = 1.8) {
+    const g = new THREE.Group(); this.group.add(g);
+    const triH = (s * Math.sqrt(3)) / 2;
+    const centerZ = -triH / 3;
+    const vertices = [
+      new THREE.Vector3(-s / 2, 0, centerZ),
+      new THREE.Vector3(s / 2, 0, centerZ),
+      new THREE.Vector3(0, 0, centerZ + triH)
+    ];
+
+    const bottom = createTriMesh(s, triH, '底面', '#FF3B30', '等边三角形');
+    bottom.mesh.position.z = centerZ;
+    g.add(bottom.mesh);
+
+    const sideConfigs = [
+      { edge: 0, label: '侧面 1', color: '#FF9500' },
+      { edge: 1, label: '侧面 2', color: '#FFCC00' },
+      { edge: 2, label: '侧面 3', color: '#34C759' }
+    ];
+    const sideFolds = sideConfigs.map(({ edge, label, color }) => {
+      const a = vertices[edge];
+      const b = vertices[(edge + 1) % vertices.length];
+      const midpoint = a.clone().add(b).multiplyScalar(0.5);
+      const outwardDirection = a.clone().sub(b).normalize();
+      const hinge = new THREE.Group();
+      hinge.position.copy(midpoint);
+      hinge.rotation.y = Math.atan2(-outwardDirection.z, outwardDirection.x);
+
+      const fold = new THREE.Group();
+      hinge.add(fold);
+      const face = createFaceMesh(s, H, label, color, '长方形侧面');
+      face.mesh.position.z = H / 2;
+      fold.add(face.mesh);
+      g.add(hinge);
+      return fold;
+    });
+
+    // 顶面接在右侧侧面的外缘，摊平时仍与侧面共边，闭合时翻到棱柱顶部。
+    const topHinge = new THREE.Group();
+    topHinge.position.z = H;
+    sideFolds[1].add(topHinge);
+    const topFold = new THREE.Group();
+    topHinge.add(topFold);
+    const top = createTriMesh(s, triH, '顶面', '#007AFF', '等边三角形');
+    topFold.add(top.mesh);
+
+    return {
+      update(t) {
+        const foldAngle = -t * (Math.PI / 2);
+        sideFolds.forEach(fold => { fold.rotation.x = foldAngle; });
+        // 与侧面同向再折一次，让顶面翻回中心底面的正上方。
+        topFold.rotation.x = foldAngle;
+      }
+    };
+  },
+
+  // 7. 六棱柱展开图：中心底面周围环绕 6 个侧面，另一底面接在侧面外缘。
+  buildHexPrismNet(s = 0.95, H = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const sides = 6;
+    const apothem = s / (2 * Math.tan(Math.PI / sides));
+    const circumradius = s / (2 * Math.sin(Math.PI / sides));
+    const vertices = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = -Math.PI / 2 + Math.PI / sides + i * (Math.PI * 2 / sides);
+      vertices.push(new THREE.Vector3(circumradius * Math.cos(angle), 0, circumradius * Math.sin(angle)));
+    }
+
+    const bottom = createRegularPolygonMesh(s, sides, '底面', '#FF3B30', '正六边形');
+    g.add(bottom.mesh);
+
+    const sideColors = ['#FF9500', '#FFCC00', '#34C759', '#00C7BE', '#007AFF', '#AF52DE'];
+    const sideFolds = vertices.map((_, edge) => {
+      const a = vertices[edge];
+      const b = vertices[(edge + 1) % sides];
+      const midpoint = a.clone().add(b).multiplyScalar(0.5);
+      const outwardDirection = a.clone().sub(b).normalize();
+      const hinge = new THREE.Group();
+      hinge.position.copy(midpoint);
+      hinge.rotation.y = Math.atan2(-outwardDirection.z, outwardDirection.x);
+
+      const fold = new THREE.Group();
+      hinge.add(fold);
+      const face = createFaceMesh(s, H, `侧面 ${edge + 1}`, sideColors[edge], '长方形侧面');
+      face.mesh.position.z = H / 2;
+      fold.add(face.mesh);
+      g.add(hinge);
+      return fold;
+    });
+
+    // 顶面接在右上侧面的外缘；正六边形的底边与该侧面的外边重合。
+    const attachEdge = 1;
+    const topHinge = new THREE.Group();
+    topHinge.position.z = H;
+    sideFolds[attachEdge].add(topHinge);
+    const topFold = new THREE.Group();
+    topHinge.add(topFold);
+    const top = createRegularPolygonMesh(s, sides, '顶面', '#FF2D55', '正六边形');
+    const topEdgeStart = vertices[0];
+    const topEdgeEnd = vertices[1];
+    const topEdgeDirection = topEdgeEnd.clone().sub(topEdgeStart).normalize();
+    const topEdgeAngle = Math.atan2(topEdgeDirection.z, topEdgeDirection.x);
+    const topAlign = new THREE.Group();
+    topAlign.rotation.y = topEdgeAngle;
+    topFold.add(topAlign);
+    const edgeMid = topEdgeStart.clone().add(topEdgeEnd).multiplyScalar(0.5);
+    top.mesh.position.set(-edgeMid.x, 0, -edgeMid.z);
+    topAlign.add(top.mesh);
+
+    return {
+      update(t) {
+        const foldAngle = -t * (Math.PI / 2);
+        sideFolds.forEach(fold => { fold.rotation.x = foldAngle; });
+        topFold.rotation.x = foldAngle;
+      }
+    };
+  },
+
+  // 8. 正四面体展开图 (四等边三角形，独立铰链轴，三顶角合拢于 (0, sqrt(2/3)*s, 0))
+  buildTetraNet(s = 1.6) {
+    const g = new THREE.Group(); this.group.add(g);
+    const triH = (s * Math.sqrt(3)) / 2;
+    const gamma = Math.PI - Math.acos(1 / 3);
+
+    // 中央底面等边三角形 (质心位于原点)
+    const baseTri = createTriMesh(s, triH, '底面', '#FF3B30', '正三角形');
+    baseTri.mesh.position.set(0, 0, -triH / 3);
+    g.add(baseTri.mesh);
+
+    const petals = [];
+    const configs = [
+      { label: '侧面 1', pos: [0, 0, -triH / 3], ry: Math.PI, color: '#FF9500' },
+      { label: '侧面 2', pos: [s / 4, 0, triH / 6], ry: Math.PI / 3, color: '#34C759' },
+      { label: '侧面 3', pos: [-s / 4, 0, triH / 6], ry: -Math.PI / 3, color: '#007AFF' }
+    ];
+
+    configs.forEach(cfg => {
+      const hingeGroup = new THREE.Group();
+      hingeGroup.position.set(...cfg.pos);
+      hingeGroup.rotation.y = cfg.ry;
+      g.add(hingeGroup);
+
+      const foldGroup = new THREE.Group();
+      hingeGroup.add(foldGroup);
+
+      const tri = createTriMesh(s, triH, cfg.label, cfg.color, '正三角形');
+      foldGroup.add(tri.mesh);
+      petals.push(foldGroup);
+    });
+
+    return {
+      update(t) {
+        const phi = -t * gamma;
+        petals.forEach(p => { p.rotation.x = phi; });
+      }
+    };
+  }
+};
+
+NetFoldingManager.init(scene);
+window.NetFoldingManager = NetFoldingManager;
+
+function updateFoldPlayButton() {
+  const btn = document.getElementById('playFoldBtn');
+  if (!btn) return;
+  const label = document.getElementById('playFoldLabel');
+  const icon = btn.querySelector('use');
+  const playing = NetFoldingManager.isPlaying;
+  if (icon) icon.setAttribute('href', playing ? '#icon-pause' : '#icon-play');
+  if (label) label.textContent = playing ? '暂停动画' : '自动折纸动画';
+  btn.classList.toggle('playing', playing);
+  setPressed(btn, playing);
+}
+updateFoldPlayButton();
+
+// ===== 严格正交相机预览 (OrthographicCamera) =====
+const VIEW_CAMERAS = {
+  front:  { pos: [0, 0, 6],   up: [0, 1, 0] },
+  back:   { pos: [0, 0, -6],  up: [0, 1, 0] },
+  top:    { pos: [0, 6, 0],   up: [0, 0, -1], orthoPos: [0, 6, 0], orthoUp: [0, 0, -1] },
+  bottom: { pos: [0, -6, 0],  up: [0, 0, 1],  orthoPos: [0, -6, 0], orthoUp: [0, 0, 1]  },
+  left:   { pos: [-6, 0, 0],  up: [0, 1, 0] },
+  right:  { pos: [6, 0, 0],   up: [0, 1, 0] }
+};
+
+const previewRenderers = {};
+const previewScenes = {};
+const previewMeshes = {};
+const previewContainers = {};
+const previewViewsByContainer = new Map();
+const previewSizes = {};
+
+function resizeMainStage() {
+  const size = measureElement(stageViewport, canvas);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(size.width, size.height, false);
+  camera.aspect = size.width / size.height;
+  camera.updateProjectionMatrix();
+  fitNetView();
+}
+
+function resizePreview(view) {
+  const rendererForView = previewRenderers[view];
+  const container = previewContainers[view];
+  if (!rendererForView || !container) return { width: 1, height: 1 };
+  const size = measureElement(container, container.querySelector('canvas'));
+  const pixelRatio = window.devicePixelRatio || 1;
+  const previous = previewSizes[view];
+  if (!previous || previous.width !== size.width || previous.height !== size.height || previous.pixelRatio !== pixelRatio) {
+    rendererForView.setPixelRatio(pixelRatio);
+    rendererForView.setSize(size.width, size.height, false);
+    previewSizes[view] = { ...size, pixelRatio };
+  }
+  return size;
+}
+
+const layoutObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.target === stageViewport) resizeMainStage();
+    else {
+      const view = previewViewsByContainer.get(entry.target);
+      if (view) renderPreview(view);
+    }
+  });
+});
+if (stageViewport) layoutObserver?.observe(stageViewport);
+resizeMainStage();
+
+function initPreviews() {
+  document.querySelectorAll('.view-cell').forEach(cell => {
+    const view = cell.dataset.view;
+    const cv = cell.querySelector('canvas');
+    const container = cell.querySelector('.preview');
+    if (!view || !cv || !container) return;
+    const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+    r.setPixelRatio(window.devicePixelRatio);
+    r.setClearColor(0xF5F3EC, 1);
+
+    const s = new THREE.Scene();
+    s.background = new THREE.Color(0xF5F3EC);
+    s.add(new THREE.AmbientLight(0xffffff, 2.1));
+    const dl = new THREE.DirectionalLight(0xffffff, 2);
+    dl.position.set(3, 4, 5);
+    s.add(dl);
+
+    previewRenderers[view] = r;
+    previewScenes[view] = s;
+    previewContainers[view] = container;
+    previewViewsByContainer.set(container, view);
+    layoutObserver?.observe(container);
+    resizePreview(view);
+  });
+}
+
+function updatePreviews(shapeKey) {
+  if (currentMode === 'net') return;
+
+  Object.values(previewMeshes).forEach(m => {
+    if (m) Object.values(previewScenes).forEach(s => s.remove(m));
+  });
+
+  Object.keys(VIEW_CAMERAS).forEach(view => {
+    const def = SHAPES[shapeKey];
+    const geo = def.create();
+    geo.center(); // 缩略图三视图几何体居中
+    const mat = new THREE.MeshStandardMaterial({
+      color: def.color,
+      roughness: 0.35,
+      flatShading: def.name === '四棱锥' || def.name === '四面体'
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    const edges = new THREE.EdgesGeometry(geo);
+    mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x1D1D1F, linewidth: 2 })));
+    if (shapeKey === 'sphere' || shapeKey === 'torus' || shapeKey === 'ellipsoid') {
+      mesh.children[0].visible = false;
+    }
+
+    previewScenes[view].add(mesh);
+    previewMeshes[view] = mesh;
+    renderPreview(view);
+  });
+}
+
+function getNetPreviewFit(view, aspect) {
+  const box = new THREE.Box3().setFromObject(NetFoldingManager.group);
+  const target = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const [width, height] = view === 'top' || view === 'bottom' ? [size.x, size.z] :
+    view === 'left' || view === 'right' ? [size.z, size.y] : [size.x, size.y];
+  return { target, frustumSize: Math.max(height, width / aspect, 0.5) * 1.15 };
+}
+
+// Keep the whole unfolding sheet inside the smaller stage without overriding a user's wider view.
+function fitNetView(position = camera.position, target = controls.target, up = camera.up) {
+  if (currentMode !== 'net' || !NetFoldingManager.currentModel) return;
+  const box = new THREE.Box3().setFromObject(NetFoldingManager.group);
+  const direction = position.clone().sub(target).normalize();
+  const right = new THREE.Vector3().crossVectors(up, direction).normalize();
+  const vertical = new THREE.Vector3().crossVectors(direction, right);
+  const tanY = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  let distance = position.distanceTo(target);
+  for (const x of [box.min.x, box.max.x]) {
+    for (const y of [box.min.y, box.max.y]) {
+      for (const z of [box.min.z, box.max.z]) {
+        const corner = new THREE.Vector3(x, y, z).sub(target);
+        distance = Math.max(distance, corner.dot(direction) + 1.12 * Math.max(
+          Math.abs(corner.dot(right)) / (tanY * camera.aspect), Math.abs(corner.dot(vertical)) / tanY));
+      }
+    }
+  }
+  position.copy(target).add(direction.multiplyScalar(distance));
+}
+
+function renderPreview(view) {
+  if (!previewRenderers[view]) return;
+  const { width, height } = resizePreview(view);
+  const camCfg = VIEW_CAMERAS[view];
+
+  const aspect = width / height;
+  const fit = currentMode === 'net' ? getNetPreviewFit(view, aspect) : {
+    target: new THREE.Vector3(0, 0, 0),
+    frustumSize: 3.6
+  };
+  const orthCam = new THREE.OrthographicCamera(
+    -fit.frustumSize * aspect / 2, fit.frustumSize * aspect / 2,
+    fit.frustumSize / 2, -fit.frustumSize / 2,
+    0.1, 50
+  );
+  const orthoPos = camCfg.orthoPos || camCfg.pos;
+  const orthoUp = camCfg.orthoUp || camCfg.up;
+  orthCam.position.set(...orthoPos).add(fit.target);
+  orthCam.up.set(...orthoUp);
+  if (currentMode === 'net') {
+    orthCam.lookAt(fit.target);
+    const wasGridVisible = grid.visible;
+    grid.visible = false;
+    try {
+      previewRenderers[view].render(scene, orthCam);
+    } finally {
+      grid.visible = wasGridVisible;
+    }
+  } else {
+    orthCam.lookAt(fit.target);
+    previewRenderers[view].render(previewScenes[view], orthCam);
+  }
+}
+
+function renderAllPreviewsForNet() {
+  Object.keys(VIEW_CAMERAS).forEach(v => renderPreview(v));
+}
+
+// 点击三视图相机平滑过渡（保持当前缩放大小）
+document.querySelectorAll('.view-cell').forEach(cell => {
+  cell.setAttribute('aria-pressed', String(cell.classList.contains('active')));
+  cell.addEventListener('click', () => {
+    document.querySelectorAll('.view-cell').forEach(c => {
+      c.classList.remove('active');
+      c.setAttribute('aria-pressed', 'false');
+    });
+    cell.classList.add('active');
+    cell.setAttribute('aria-pressed', 'true');
+    const view = cell.dataset.view;
+    const cfg = VIEW_CAMERAS[view];
+    animateCamera(cfg.pos, cfg.up, true);
+    const label = cell.querySelector('.label')?.textContent || cell.getAttribute('aria-label') || view;
+    showToast(`切至 ${label} 视角 👀`);
+  });
+});
+
+let cameraAnimationFrame = 0;
+controls.addEventListener('start', () => {
+  cancelAnimationFrame(cameraAnimationFrame);
+  document.querySelectorAll('.view-cell').forEach(c => {
+    c.classList.remove('active');
+    c.setAttribute('aria-pressed', 'false');
+  });
+});
+
+function animateCamera(targetPos, targetUp, preserveDistance = false) {
+  cancelAnimationFrame(cameraAnimationFrame);
+  const startPos = camera.position.clone();
+  const startUp = camera.up.clone();
+  const targetCenterY = currentMode === 'net' ? 0.3 : 0.85;
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(0, targetCenterY, 0);
+
+  const startOffset = startPos.clone().sub(startTarget);
+  const startDist = Math.max(0.1, startOffset.length());
+
+  let targetDir;
+  let targetDist;
+  let endPos;
+
+  if (preserveDistance) {
+    targetDir = new THREE.Vector3(...targetPos).normalize();
+    targetDist = startDist;
+    endPos = endTarget.clone().addScaledVector(targetDir, targetDist);
+  } else {
+    endPos = new THREE.Vector3(...targetPos);
+    const offset = endPos.clone().sub(endTarget);
+    targetDist = Math.max(0.1, offset.length());
+    targetDir = offset.clone().normalize();
+  }
+
+  const endUp = targetUp ? new THREE.Vector3(...targetUp).normalize() : new THREE.Vector3(0, 1, 0);
+
+  if (currentMode === 'net') {
+    fitNetView(endPos, endTarget, endUp);
+  }
+
+  const finalEndOffset = endPos.clone().sub(endTarget);
+  const finalEndDist = Math.max(0.1, finalEndOffset.length());
+  const finalEndDir = finalEndOffset.clone().normalize();
+  const finalStartDir = startOffset.clone().normalize();
+
+  const qDir = new THREE.Quaternion().setFromUnitVectors(finalStartDir, finalEndDir);
+  const qIdent = new THREE.Quaternion();
+
+  const startUpNorm = startUp.clone().normalize();
+  const qUp = new THREE.Quaternion().setFromUnitVectors(startUpNorm, endUp);
+
+  const startTime = performance.now();
+  const duration = 500;
+
+  function step() {
+    const elapsed = performance.now() - startTime;
+    const t = Math.min(1, elapsed / duration);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const qCurrentDir = new THREE.Quaternion().slerpQuaternions(qIdent, qDir, ease);
+    const currentDir = finalStartDir.clone().applyQuaternion(qCurrentDir);
+    const currentDist = THREE.MathUtils.lerp(startDist, finalEndDist, ease);
+
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    camera.position.copy(controls.target).addScaledVector(currentDir, currentDist);
+
+    const qCurrentUp = new THREE.Quaternion().slerpQuaternions(qIdent, qUp, ease);
+    camera.up.copy(startUpNorm).applyQuaternion(qCurrentUp).normalize();
+    camera.lookAt(controls.target);
+
+    camera.updateMatrixWorld();
+    controls.update();
+
+    if (t < 1) {
+      cameraAnimationFrame = requestAnimationFrame(step);
+    } else {
+      controls.target.copy(endTarget);
+      camera.position.copy(endPos);
+      camera.up.copy(endUp);
+      camera.lookAt(controls.target);
+      camera.updateMatrixWorld();
+      controls.update();
+      syncZoomUI();
+    }
+  }
+  step();
+}
+
+// ===== 模式切换控制 =====
+const tab3D = document.getElementById('tab3DMode');
+const tabNet = document.getElementById('tabNetMode');
+const insp3D = document.getElementById('inspector3DContent');
+const inspNet = document.getElementById('inspectorNetContent');
+let exploreView = null;
+
+function updateNetShapeAvailability() {
+  document.querySelectorAll('.dock-item').forEach(item => {
+    const key = item.dataset.shape;
+    const select = item.querySelector('.shape-select');
+    if (!select || !key) return;
+    const disabled = currentMode === 'net' && !NetFoldingManager.isSupported(key);
+    select.disabled = disabled;
+    select.setAttribute('aria-disabled', String(disabled));
+    if (disabled) select.title = `${SHAPES[key]?.name || '该形体'}暂无展开图`;
+    else select.removeAttribute('title');
+    item.classList.toggle('net-disabled', disabled);
+  });
+}
+
+function updateModeUI() {
+  tab3D?.classList.toggle('active', currentMode === '3d');
+  tabNet?.classList.toggle('active', currentMode === 'net');
+  tab3D?.setAttribute('aria-pressed', String(currentMode === '3d'));
+  tabNet?.setAttribute('aria-pressed', String(currentMode === 'net'));
+  if (insp3D) insp3D.style.display = currentMode === '3d' ? 'block' : 'none';
+  if (inspNet) inspNet.style.display = currentMode === 'net' ? 'block' : 'none';
+  const wireBtn = document.getElementById('wireBtn');
+  if (wireBtn) wireBtn.disabled = currentMode !== '3d';
+  const snapBtn = document.getElementById('snapBtn');
+  if (snapBtn) snapBtn.disabled = currentMode !== '3d';
+  updateNetShapeAvailability();
+  updateStageLabels();
+  updateInspectorState();
+}
+
+tab3D?.addEventListener('click', () => {
+  if (currentMode === '3d') return;
+  cancelAnimationFrame(cameraAnimationFrame);
+  currentMode = '3d';
+  if (exploreView) {
+    camera.position.copy(exploreView.position);
+    camera.up.copy(exploreView.up);
+    controls.target.copy(exploreView.target);
+    controls.update();
+  }
+  updateModeUI();
+
+  objects.forEach(o => {
+    o.mesh.visible = true;
+    if (o.shadow) o.shadow.visible = true;
+  });
+  NetFoldingManager.setVisible(false);
+  NetFoldingManager.stopPlay();
+
+  if (selectedObj) selectObject(selectedObj);
+  else syncDisplayedShape(currentShapeKey);
+  showGizmo();
+  updatePreviews(currentShapeKey);
+  showToast('已进入 3D 自由探索模式 🧊');
+});
+
+tabNet?.addEventListener('click', () => {
+  if (currentMode === 'net') return;
+  cancelAnimationFrame(cameraAnimationFrame);
+  exploreView = { position: camera.position.clone(), up: camera.up.clone(), target: controls.target.clone() };
+  currentMode = 'net';
+
+  // 展开图课堂默认开启平稳视角
+  controls.steadyView = true;
+  controls.resetUpVector();
+  const steadyBtn = document.getElementById('steadyViewBtn');
+  if (steadyBtn) {
+    steadyBtn.classList.add('active');
+    setPressed(steadyBtn, true);
+  }
+
+  updateModeUI();
+
+  objects.forEach(o => {
+    o.mesh.visible = false;
+    if (o.shadow) o.shadow.visible = false;
+  });
+  hideGizmo();
+  if (selectionBox) selectionBox.visible = false;
+
+  NetFoldingManager.setVisible(true);
+  showToast('已进入 展开图折纸课堂 📐');
+  NetFoldingManager.loadShape(currentShapeKey);
+  renderAllPreviewsForNet();
+});
+
+updateModeUI();
+
+// 展开图事件绑定
+document.getElementById('foldSlider').addEventListener('input', (e) => {
+  NetFoldingManager.stopPlay();
+  NetFoldingManager.applyFold(parseFloat(e.target.value));
+});
+
+document.getElementById('playFoldBtn').addEventListener('click', () => {
+  NetFoldingManager.togglePlay();
+});
+
+document.getElementById('flatNetBtn').addEventListener('click', () => {
+  NetFoldingManager.stopPlay();
+  NetFoldingManager.applyFold(0);
+  showToast('已摊平在地面 📄 (俯视图看最标准)');
+});
+
+document.getElementById('solidNetBtn').addEventListener('click', () => {
+  NetFoldingManager.stopPlay();
+  NetFoldingManager.applyFold(1);
+  showToast('已闭合成 3D 实体 🧊');
+});
+
+document.getElementById('showLabelsCheck').addEventListener('change', (e) => {
+  const show = e.target.checked;
+  NetFoldingManager.showLabels = show;
+  NetFoldingManager.loadShape(NetFoldingManager.currentKey);
+  showToast(show ? '显示面名称 🏷️' : '隐藏面名称 🙈');
+});
+
+// ===== 左侧形状 Dock 点击绑定 =====
+document.querySelectorAll('.shape-select').forEach(button => {
+  button.addEventListener('click', () => {
+    const item = button.closest('.dock-item');
+    const requestedKey = button.dataset.shape || item?.dataset.shape;
+    if (!SHAPES[requestedKey]) return;
+    syncDisplayedShape(requestedKey);
+
+    if (currentMode === 'net') {
+      const actualKey = NetFoldingManager.loadShape(requestedKey);
+      renderAllPreviewsForNet();
+      if (actualKey === requestedKey) {
+        showToast(`展开图：${SHAPES[actualKey].name}`);
+      }
+    } else {
+      updatePreviews(requestedKey);
+      showToast(`点击 ➕ 添加 ${SHAPES[requestedKey].name}`);
+    }
+  });
+});
+
+// 快捷添加按钮
+document.querySelectorAll('.quick-add-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (currentMode === 'net') tab3D.click();
+    const key = btn.dataset.shape || btn.closest('.dock-item')?.dataset.shape;
+    if (!SHAPES[key]) return;
+    addShape(key);
+    showToast(`已添加 ${SHAPES[key].name} ✨`);
+  });
+});
+
+// 清空与复位
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if (objects.length === 0) return;
+  clearAllObjects();
+  showToast('场景已清空 🗑️');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  animateCamera([2.8, 2.2, 3.5], [0, 1, 0]);
+  objects.forEach(o => {
+    const activeBox = new THREE.Box3().setFromObject(o.mesh);
+    const bottomOffset = o.mesh.position.y - activeBox.min.y;
+    o.mesh.position.set(0, bottomOffset, 0);
+  });
+  updatePosDisplay();
+  showToast('视角与物体已归位 🏠');
+});
+
+document.getElementById('rotateBtn').addEventListener('click', (e) => {
+  controls.autoRotate = !controls.autoRotate;
+  e.currentTarget.classList.toggle('active', controls.autoRotate);
+  setPressed(e.currentTarget, controls.autoRotate);
+  showToast(controls.autoRotate ? '自动旋转中 🔄' : '已停止旋转 ✋');
+});
+
+document.getElementById('wireBtn').addEventListener('click', (e) => {
+  isWireframe = !isWireframe;
+  objects.forEach(o => o.mesh.material.wireframe = isWireframe);
+  e.currentTarget.classList.toggle('active', isWireframe);
+  setPressed(e.currentTarget, isWireframe);
+  showToast(isWireframe ? '骨架透视模式 🦴' : '实体材质模式 🎁');
+});
+
+// 色彩调色盘
+document.querySelectorAll('.color-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    if (!selectedObj || currentMode !== '3d') return;
+    const colorHex = parseInt(chip.dataset.color);
+    selectedObj.mesh.material.color.setHex(colorHex);
+    updateColorChipState();
+    showToast('已更换新色彩 🎨');
+  });
+});
+
+// ===== TransformControls 手柄 =====
+let transformControls = null;
+let gizmoMode = 'translate';
+let gizmoVisible = true;
+let gizmoDragging = false;
+Object.defineProperty(window, 'gizmoMode', { get: () => gizmoMode, configurable: true });
+
+function updateGizmoSize(obj = selectedObj) {
+  if (!transformControls || gizmoDragging) return;
+  if (!obj || !obj.mesh) {
+    transformControls.setSize(gizmoMode === 'rotate' ? 0.92 : 0.85);
+    return;
+  }
+  const box = new THREE.Box3().setFromObject(obj.mesh);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const radius = Math.max(size.x, size.y, size.z) / 2;
+
+  if (gizmoMode === 'rotate') {
+    // 旋转模式：角度圆环紧凑精致地包裹在图形外侧，比例自然舒适，绝不过大
+    const targetSize = THREE.MathUtils.clamp(0.85 + radius * 0.08, 0.88, 1.02);
+    transformControls.setSize(targetSize);
+  } else {
+    // 移动模式：移动坐标箭头适中，中心与选中框严格重合
+    const targetSize = THREE.MathUtils.clamp(0.82 + radius * 0.05, 0.82, 0.92);
+    transformControls.setSize(targetSize);
+  }
+}
+
+function initTransformControls() {
+  if (transformControls) return;
+  transformControls = new TransformControls(camera, renderer.domElement);
+  transformControls.setMode(gizmoMode);
+  updateGizmoSize();
+  transformControls.setTranslationSnap(null);
+  transformControls.setRotationSnap(isSnapping ? SNAP_ROTATION : null);
+  window.transformControls = transformControls;
+  window.updateGizmoSize = updateGizmoSize;
+
+  transformControls.addEventListener('objectChange', () => {
+    if (selectedObj && currentMode === '3d') {
+      if (isSnapping && gizmoMode === 'translate') {
+        liveMagneticSnap(selectedObj);
+      }
+      updatePosDisplay();
+    }
+  });
+
+  transformControls.addEventListener('dragging-changed', (ev) => {
+    gizmoDragging = ev.value;
+    controls.enabled = !ev.value;
+    if (!ev.value && selectedObj && currentMode === '3d') {
+      updateGizmoSize(selectedObj);
+      if (isSnapping) {
+        applySnapToObject(selectedObj, true);
+      } else {
+        updatePosDisplay();
+      }
+    }
+  });
+
+  transformControls.addEventListener('change', () => {
+    if (selectedObj && gizmoMode === 'translate') {
+      updatePosDisplay();
+    }
+  });
+
+  scene.add(transformControls);
+}
+
+function showGizmo() {
+  gizmoVisible = true;
+  initTransformControls();
+  if (selectedObj && currentMode === '3d') transformControls.attach(selectedObj.mesh);
+  transformControls.setMode(gizmoMode);
+  updateGizmoSize(selectedObj);
+}
+
+function hideGizmo() {
+  gizmoVisible = false;
+  if (transformControls) transformControls.detach();
+}
+
+const gBtn = document.getElementById('gizmoBtn');
+const rGBtn = document.getElementById('rotateGizmoBtn');
+const sBtn = document.getElementById('snapBtn');
+const inspSBtn = document.getElementById('inspectorSnapBtn');
+setPressed(document.getElementById('rotateBtn'), controls.autoRotate);
+setPressed(document.getElementById('wireBtn'), isWireframe);
+setPressed(document.getElementById('steadyViewBtn'), controls.steadyView);
+setPressed(gBtn, true);
+setPressed(rGBtn, false);
+setPressed(sBtn, isSnapping);
+setPressed(inspSBtn, isSnapping);
+
+gBtn.addEventListener('click', () => {
+  gBtn.classList.add('active');
+  rGBtn.classList.remove('active');
+  setPressed(gBtn, true);
+  setPressed(rGBtn, false);
+  gizmoMode = 'translate';
+  showGizmo();
+  showToast('切换至 移动手柄 ↔️');
+});
+
+rGBtn.addEventListener('click', () => {
+  rGBtn.classList.add('active');
+  gBtn.classList.remove('active');
+  setPressed(rGBtn, true);
+  setPressed(gBtn, false);
+  gizmoMode = 'rotate';
+  showGizmo();
+  showToast('切换至 旋转手柄 🔃');
+});
+
+sBtn?.addEventListener('click', () => {
+  setSnapping(!isSnapping, true);
+});
+
+const steadyViewBtn = document.getElementById('steadyViewBtn');
+steadyViewBtn?.addEventListener('click', (e) => {
+  controls.steadyView = !controls.steadyView;
+  const isSteady = controls.steadyView;
+  e.currentTarget.classList.toggle('active', isSteady);
+  setPressed(e.currentTarget, isSteady);
+  if (isSteady) {
+    controls.resetUpVector();
+    showToast('平稳视角已开启 🧭 (极角锁定，保持正立不翻倒)');
+  } else {
+    showToast('平稳视角已关闭 🚀 (已解锁上下 360° 自由无限翻转)');
+  }
+});
+
+inspSBtn?.addEventListener('click', () => {
+  setSnapping(!isSnapping, true);
+});
+
+document.getElementById('alignSnapBtn')?.addEventListener('click', () => alignActiveObject('abut'));
+document.getElementById('alignFrontBtn')?.addEventListener('click', () => alignActiveObject('front'));
+document.getElementById('alignTopBtn')?.addEventListener('click', () => alignActiveObject('top'));
+document.getElementById('alignGroundBtn')?.addEventListener('click', () => alignActiveObject('ground'));
+
+// 视角缩放调节事件监听
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomBadgeBtn = document.getElementById('zoomBadgeBtn');
+
+zoomSlider?.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  setZoom(val);
+});
+
+zoomInBtn?.addEventListener('click', () => {
+  const current = getZoomFromCamera();
+  const next = Math.min(MAX_ZOOM_PERCENT, Math.round((current + 15) / 5) * 5);
+  setZoom(next);
+  showToast(`视角放大至 ${next}% 🔍`);
+});
+
+zoomOutBtn?.addEventListener('click', () => {
+  const current = getZoomFromCamera();
+  const next = Math.max(MIN_ZOOM_PERCENT, Math.round((current - 15) / 5) * 5);
+  setZoom(next);
+  showToast(`视角缩小至 ${next}% 🔍`);
+});
+
+zoomBadgeBtn?.addEventListener('click', () => {
+  setZoom(100);
+  showToast('缩放已复位 100% 🔍');
+});
+
+// 尺寸滑块
+function bindSlider(id, valId, axis) {
+  const slider = document.getElementById(id);
+  const val = document.getElementById(valId);
+  slider.addEventListener('input', () => {
+    const v = parseFloat(slider.value);
+    val.textContent = v.toFixed(1);
+    if (!selectedObj || currentMode !== '3d') return;
+    const s = { ...selectedObj.baseScale };
+    s[axis] = v;
+    applySize(selectedObj, s.x, s.y, s.z);
+  });
+}
+bindSlider('sizeX', 'sizeXVal', 'x');
+bindSlider('sizeY', 'sizeYVal', 'y');
+bindSlider('sizeZ', 'sizeZVal', 'z');
+
+document.getElementById('resetSizeBtn').addEventListener('click', () => {
+  if (!selectedObj || currentMode !== '3d') return;
+  applySize(selectedObj, 1, 1, 1);
+  syncSizeSliders(selectedObj);
+  showToast('尺寸已还原 ↺');
+});
+
+// 键盘微调
+function isInteractiveTarget(target) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('input, textarea, select, button, form, [contenteditable="true"], [contenteditable=""]')) || target.isContentEditable;
+}
+
+window.addEventListener('keydown', (e) => {
+  if (isInteractiveTarget(e.target)) return;
+  if (e.key === '=' || e.key === '+') {
+    setZoom(Math.min(MAX_ZOOM_PERCENT, getZoomFromCamera() + 15));
+    e.preventDefault();
+    return;
+  }
+  if (e.key === '-' || e.key === '_') {
+    setZoom(Math.max(MIN_ZOOM_PERCENT, getZoomFromCamera() - 15));
+    e.preventDefault();
+    return;
+  }
+  if (!selectedObj || currentMode !== '3d') return;
+  const baseStep = isSnapping ? SNAP_GRID : 0.2;
+  const step = e.shiftKey ? (isSnapping ? SNAP_GRID * 2 : 0.5) : baseStep;
+  const obj = selectedObj;
+  let handled = false;
+  switch (e.key) {
+    case 'ArrowLeft':  obj.mesh.position.x -= step; handled = true; break;
+    case 'ArrowRight': obj.mesh.position.x += step; handled = true; break;
+    case 'ArrowUp':    obj.mesh.position.y += step; handled = true; break;
+    case 'ArrowDown':  obj.mesh.position.y -= step; handled = true; break;
+    case 'PageUp':     obj.mesh.position.z -= step; handled = true; break;
+    case 'PageDown':   obj.mesh.position.z += step; handled = true; break;
+    case 'q': case 'Q': obj.mesh.position.y += step; handled = true; break;
+    case 'e': case 'E': obj.mesh.position.y -= step; handled = true; break;
+    case 'r': case 'R': {
+      const activeBox = new THREE.Box3().setFromObject(obj.mesh);
+      const bottomOffset = obj.mesh.position.y - activeBox.min.y;
+      obj.mesh.position.set(0, bottomOffset, 0);
+      handled = true; showToast('回到中心 ↺'); break;
+    }
+    case '[': case ']': {
+      const direction = e.key === ']' ? 1 : -1;
+      selectObject(objects[(objects.indexOf(obj) + direction + objects.length) % objects.length]);
+      handled = true;
+      showToast(`选中 ${selectedObj.def.name}`);
+      break;
+    }
+    case 'Delete': case 'Backspace':
+      removeObject(obj);
+      handled = true; showToast('已删除 🗑️');
+      break;
+  }
+  if (handled) {
+    if (isSnapping && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'q', 'Q', 'e', 'E'].includes(e.key)) {
+      applySnapToObject(obj);
+    }
+    e.preventDefault();
+    updatePosDisplay();
+  }
+});
+
+// 灵动吐司气泡 (Toast)
+let toastTimer;
+function showToast(text) {
+  const el = document.getElementById('dynamicToast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+// 阴影与包围盒实时追踪
+function updateShadows() {
+  objects.forEach(obj => {
+    if (!obj.shadow) return;
+    if (currentMode !== '3d' || !obj.mesh.visible) {
+      obj.shadow.visible = false;
+      return;
+    }
+    obj.shadow.visible = true;
+    obj.shadow.position.x = obj.mesh.position.x;
+    obj.shadow.position.z = obj.mesh.position.z;
+    obj.shadow.position.y = 0.002;
+
+    const box = new THREE.Box3().setFromObject(obj.mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const sx = Math.max(size.x * 1.35, 1.2);
+    const sz = Math.max(size.z * 1.35, 1.2);
+
+    // 阴影随物体离地高度动态渐变（贴地时浓郁清晰，抬高时虚化扩散）
+    const liftY = Math.max(0, box.min.y);
+    const fade = Math.max(0.08, 1 / (1 + liftY * 1.4));
+    obj.shadow.material.opacity = 0.65 * fade;
+    obj.shadow.scale.set(sx * (1 + liftY * 0.3), sz * (1 + liftY * 0.3), 1);
+  });
+}
+
+// 主循环
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  if (selectedObj && selectionBox && selectionBox.visible) {
+    const box = new THREE.Box3().setFromObject(selectedObj.mesh);
+    const center = new THREE.Vector3(); box.getCenter(center);
+    selectionBox.position.copy(center);
+  }
+  updatePivotMarker();
+  updateShadows();
+  NetFoldingManager.updateFrame();
+  renderer.render(scene, camera);
+}
+animate();
+
+// 响应式自适应
+window.addEventListener('resize', () => {
+  resizeMainStage();
+  Object.keys(previewRenderers).forEach(v => renderPreview(v));
+});
+
+// 初始化场景与事件
+initPreviews();
+addShape('cube');
+showGizmo();
+camera.lookAt(controls.target);
+camera.updateMatrixWorld();
+controls.update();
+syncZoomUI();
+
+// 鼠标射线拾取
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const pointerStarts = new Map();
+const activeTouchPointers = new Set();
+let multiTouchGesture = false;
+
+function pointerPosition(event) {
+  return { x: event.clientX, y: event.clientY };
+}
+
+function handlePointerDown(event) {
+  if ((event.pointerType === 'mouse' && (event.button === 0 || event.button === 2)) || event.pointerType === 'touch') {
+    showPivotMarker();
+  }
+  if (event.pointerType === 'mouse' && event.button !== 0 && event.button !== 2) return;
+  if (event.pointerType === 'touch') {
+    activeTouchPointers.add(event.pointerId);
+    if (activeTouchPointers.size > 1) multiTouchGesture = true;
+  }
+  const point = pointerPosition(event);
+  pointerStarts.set(event.pointerId, {
+    ...point,
+    pointerType: event.pointerType,
+    multiTouch: multiTouchGesture || activeTouchPointers.size > 1,
+    gizmoDragging: gizmoDragging || Boolean(transformControls?.dragging)
+  });
+}
+
+function handlePointerUp(event, cancelled = false) {
+  hidePivotMarker();
+  const start = pointerStarts.get(event.pointerId);
+  pointerStarts.delete(event.pointerId);
+  const pointerType = event.pointerType || start?.pointerType;
+  const wasMultiTouch = Boolean(start?.multiTouch || multiTouchGesture || (pointerType === 'touch' && activeTouchPointers.size > 1));
+  if (pointerType === 'touch') {
+    activeTouchPointers.delete(event.pointerId);
+    if (activeTouchPointers.size === 0) multiTouchGesture = false;
+  }
+  if (!start || cancelled || currentMode !== '3d' || wasMultiTouch) return;
+  if (pointerType === 'mouse' && event.button !== 0) return;
+  const point = pointerPosition(event);
+  const dx = point.x - start.x, dy = point.y - start.y;
+  if (Math.sqrt(dx * dx + dy * dy) > 5) return;
+  if (start.gizmoDragging || gizmoDragging || transformControls?.dragging) return;
+
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  mouse.x = ((point.x - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((point.y - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const meshes = objects.map(o => o.mesh);
+  const hits = raycaster.intersectObjects(meshes, false);
+  if (hits.length > 0) {
+    const id = hits[0].object.userData.objId;
+    const obj = objects.find(o => o.id === id);
+    if (obj) {
+      selectObject(obj);
+      showToast(`选中 ${obj.def.name} #${obj.id} 🎯`);
+    }
+  }
+}
+
+canvas.addEventListener('pointerdown', handlePointerDown);
+canvas.addEventListener('pointerup', handlePointerUp);
+canvas.addEventListener('pointercancel', event => handlePointerUp(event, true));
+
+// 开屏迎宾提示
+setTimeout(() => showToast('欢迎来到 3D 几何探险家！✨'), 600);
+
+</script>
+</body>
+</html>
