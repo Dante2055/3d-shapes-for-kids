@@ -1,10 +1,12 @@
-import { chromium } from "/Users/jinbit/.nvm/versions/node/v24.13.1/lib/node_modules/playwright/index.mjs";
+import { chromium } from "./utils/get-playwright.mjs";
 import http from "http";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const BASE_DIR = path.resolve(__dirname, "..");
 const PORT = 4195;
-const BASE_DIR = "/Volumes/Assets/06_编程项目/3d-shapes-for-kids";
 
 const server = http.createServer((req, res) => {
   const filePath = path.join(BASE_DIR, req.url === "/" ? "index.html" : req.url.split("?")[0]);
@@ -181,9 +183,10 @@ server.listen(PORT, async () => {
     await (await page.$(`.dock-item[data-shape="prism"] .shape-select`)).click();
     await page.waitForTimeout(150);
 
-    const artifactDir = "/Users/jinbit/.gemini/antigravity/brain/f64f7591-2e48-4228-aec8-839772e9a9ee";
+    const artifactDir = path.join(BASE_DIR, "output", "playwright");
+    if (!fs.existsSync(artifactDir)) fs.mkdirSync(artifactDir, { recursive: true });
     await page.screenshot({ path: path.join(artifactDir, "icon-correspondence-prism.png") });
-    console.log("✓ Screenshot saved to icon-correspondence-prism.png");
+    console.log("✓ Screenshot saved to output/playwright/icon-correspondence-prism.png");
 
     console.log("\nALL ICON CORRESPONDENCE CHECKS PASSED 100%!");
   } finally {

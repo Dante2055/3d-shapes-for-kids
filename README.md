@@ -56,3 +56,19 @@ python3 -m http.server 8000
 ```
 
 打开浏览器访问 `http://localhost:8000` 即可体验。
+
+## 🧪 自动化测试
+
+项目基于 Playwright 提供了覆盖 3D 空间交互、手势旋转方向、展开图折叠精度、磁吸对齐及音频播放的端到端测试用例：
+
+```bash
+# 1. 安装测试依赖
+npm install
+
+# 2. 运行核心功能测试
+npm test
+
+# 3. 运行全部测试套件
+npm run test:all
+```
+

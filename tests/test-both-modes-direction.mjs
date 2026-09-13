@@ -1,10 +1,14 @@
-import { chromium } from "/Users/jinbit/.nvm/versions/node/v24.13.1/lib/node_modules/playwright/index.mjs";
+import { chromium } from "./utils/get-playwright.mjs";
 import http from "http";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = path.resolve(__dirname, "..");
 
 const server = http.createServer((req, res) => {
-  const filePath = path.join("/Volumes/Assets/06_编程项目/3d-shapes-for-kids", req.url === "/" ? "index.html" : req.url);
+  const filePath = path.join(ROOT_DIR, req.url === "/" ? "index.html" : req.url);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     const ext = path.extname(filePath);
     const mime = ext === ".html" ? "text/html" : ext === ".js" || ext === ".mjs" ? "text/javascript" : "text/plain";

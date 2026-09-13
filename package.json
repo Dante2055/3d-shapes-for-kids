@@ -1,0 +1,23 @@
+{
+  "name": "3d-shapes-for-kids",
+  "version": "1.0.0",
+  "description": "3D 几何探险家 · 儿童 3D 几何图形与展开图探索互动实验室",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/test-both-modes-direction.mjs && node tests/zoom-checks.mjs",
+    "test:all": "node tests/test-both-modes-direction.mjs && node tests/test-rotation-direction.mjs && node tests/vertical-tumble-checks.mjs && node tests/zoom-checks.mjs && node tests/test-gizmo-alignment.mjs && node tests/test-gizmo-verification.mjs && node tests/test-icon-correspondence.mjs && node tests/run-snap-e2e.mjs"
+  },
+  "keywords": [
+    "threejs",
+    "3d",
+    "geometry",
+    "kids-education",
+    "net-folding",
+    "playwright"
+  ],
+  "author": "Dante2055",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}
