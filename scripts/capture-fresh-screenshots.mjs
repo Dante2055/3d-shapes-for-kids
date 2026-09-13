@@ -92,8 +92,8 @@ server.listen(PORT, async () => {
     await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(outDir, 'net-hexprism-v2.png') });
 
-    // --- Screenshot 4: 磁吸拼合 (Snap & Alignment feature with two shapes) ---
-    console.log('Capturing 4: snap-align-v2.png...');
+    // --- Screenshot 4: 磁吸拼合 (Snap & Alignment feature with two shapes touching) ---
+    console.log('Capturing 4: snap-align-v3.png...');
     await page.click('#tab3DMode');
     await page.waitForTimeout(400);
     // Switch to box shape, add a box, enable snap
@@ -101,10 +101,16 @@ server.listen(PORT, async () => {
     await page.waitForTimeout(300);
     await page.click('#snapBtn');
     await page.waitForTimeout(200);
-    // Click ground align
-    await page.click('#alignGroundBtn');
+    // Click '贴紧旁边' (Abut) to snap snugly against Cube
+    await page.click('#alignSnapBtn');
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, 'snap-align-v2.png') });
+    // Click '前面对齐' (Front flush)
+    await page.click('#alignFrontBtn');
+    await page.waitForTimeout(200);
+    // Click '平贴地面' (Ground align)
+    await page.click('#alignGroundBtn');
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: path.join(outDir, 'snap-align-v3.png') });
 
     console.log('All fresh screenshots captured successfully!');
   } catch (err) {

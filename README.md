@@ -26,7 +26,7 @@
 ### 4. 磁吸拼合与积木化组合
 支持多物体平贴地面、贴紧旁边与对齐吸附，如同积木般自由拼接搭建：
 
-![磁吸与对齐功能](docs/screenshots/snap-align-v2.png)
+![磁吸与对齐功能](docs/screenshots/snap-align-v3.png)
 
 ---
 
