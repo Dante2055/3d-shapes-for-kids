@@ -6,12 +6,6 @@
 
 ---
 
-## 🌐 在线体验
-
-点击直接访问：👉 **[https://3dshapes.dtbit.cloud](https://3dshapes.dtbit.cloud)**
-
----
-
 ## 📸 界面预览与使用截图
 
 ### 1. 3D 自由探索与多角度观察
