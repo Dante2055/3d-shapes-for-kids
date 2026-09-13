@@ -11,22 +11,22 @@
 ### 1. 3D 自由探索与多角度观察
 支持 360° 旋转、平移缩放、顶视图/侧视图快速切换、尺寸调整与骨架透视模式：
 
-![3D 自由探索](docs/screenshots/3d-explore.png)
+![3D 自由探索](docs/screenshots/3d-explore-v2.png)
 
 ### 2. 展开图课堂（动态折纸与折叠动画）
 支持滑块自由控制展开/折叠进度，直观理解立体图形与平面展开图的对应关系：
 
-![展开图折叠互动](docs/screenshots/net-folding.png)
+![展开图折叠互动](docs/screenshots/net-folding-v2.png)
 
 ### 3. 多边形展开图与面特征识别
 每个面带有颜色区分与标识，一目了然观察棱、面、顶点的空间联系：
 
-![多边形展开图](docs/screenshots/net-hexprism.png)
+![多边形展开图](docs/screenshots/net-hexprism-v2.png)
 
 ### 4. 磁吸拼合与积木化组合
 支持多物体平贴地面、贴紧旁边与对齐吸附，如同积木般自由拼接搭建：
 
-![磁吸与对齐功能](docs/screenshots/snap-align.png)
+![磁吸与对齐功能](docs/screenshots/snap-align-v2.png)
 
 ---
 

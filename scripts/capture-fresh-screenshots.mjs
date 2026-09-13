@@ -58,10 +58,10 @@ server.listen(PORT, async () => {
       const toast = document.getElementById('dynamicToast');
       if (toast) toast.classList.remove('show');
     });
-    await page.screenshot({ path: path.join(outDir, '3d-explore.png') });
+    await page.screenshot({ path: path.join(outDir, '3d-explore-v2.png') });
 
     // --- Screenshot 2: 展开图课堂 (Cube at ~40% folding with labels) ---
-    console.log('Capturing 2: net-folding.png...');
+    console.log('Capturing 2: net-folding-v2.png...');
     await page.click('#tabNetMode');
     await page.waitForTimeout(400);
     await page.evaluate(() => {
@@ -74,10 +74,10 @@ server.listen(PORT, async () => {
       if (toast) toast.classList.remove('show');
     });
     await page.waitForTimeout(400);
-    await page.screenshot({ path: path.join(outDir, 'net-folding.png') });
+    await page.screenshot({ path: path.join(outDir, 'net-folding-v2.png') });
 
     // --- Screenshot 3: 六棱柱展开图 (Hexprism flat net at 0%) ---
-    console.log('Capturing 3: net-hexprism.png...');
+    console.log('Capturing 3: net-hexprism-v2.png...');
     await page.click('.dock-item[data-shape="hexPrism"] .shape-select');
     await page.waitForTimeout(400);
     await page.evaluate(() => {
@@ -90,10 +90,10 @@ server.listen(PORT, async () => {
       if (toast) toast.classList.remove('show');
     });
     await page.waitForTimeout(400);
-    await page.screenshot({ path: path.join(outDir, 'net-hexprism.png') });
+    await page.screenshot({ path: path.join(outDir, 'net-hexprism-v2.png') });
 
     // --- Screenshot 4: 磁吸拼合 (Snap & Alignment feature with two shapes) ---
-    console.log('Capturing 4: snap-align.png...');
+    console.log('Capturing 4: snap-align-v2.png...');
     await page.click('#tab3DMode');
     await page.waitForTimeout(400);
     // Switch to box shape, add a box, enable snap
@@ -104,7 +104,7 @@ server.listen(PORT, async () => {
     // Click ground align
     await page.click('#alignGroundBtn');
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, 'snap-align.png') });
+    await page.screenshot({ path: path.join(outDir, 'snap-align-v2.png') });
 
     console.log('All fresh screenshots captured successfully!');
   } catch (err) {
